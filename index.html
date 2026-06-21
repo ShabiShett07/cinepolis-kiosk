@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinepolis Self-Service Kiosk — Powered by CIRA</title>
+  <meta name="description"
+    content="Cinepolis AI-Powered Self-Service Ticket Kiosk featuring CIRA, your personal cinema assistant.">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="css/design-system.css?v=1.1">
+  <link rel="stylesheet" href="css/kiosk.css?v=1.1">
+</head>
+
+<body>
+  <div id="kiosk-root">
+
+    <!-- ====== HEADER ====== -->
+    <header id="kiosk-header">
+      <div class="kiosk-logo">
+        <div class="kiosk-logo-star">✦</div>
+        <div>
+          <div class="kiosk-logo-text">Cine<span>polis</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:24px;">
+        <div class="step-indicator" id="step-indicator" style="display:none;">
+          <div class="step-dot" id="step-1"></div>
+          <div class="step-dot" id="step-2"></div>
+          <div class="step-dot" id="step-3"></div>
+          <div class="step-dot" id="step-4"></div>
+          <div class="step-dot" id="step-5"></div>
+          <div class="step-dot" id="step-6"></div>
+        </div>
+        <div>
+          <div class="kiosk-time" id="kiosk-time">12:00 PM</div>
+          <div class="kiosk-location" id="kiosk-date">Sat, 21 Jun</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====== CIRA CHARACTER ====== -->
+    <div id="cira-character" class="cira-hidden">
+      <img class="cira-img" src="assets/cira/cira_idle.png" alt="CIRA - Your Cinema Assistant">
+    </div>
+
+    <!-- ====== CIRA SPEECH BUBBLE ====== -->
+    <div id="cira-bubble"></div>
+
+    <!-- =====================================================
+       SCREEN 0: IDLE / ATTRACT
+  ===================================================== -->
+    <section class="screen active" id="screen-idle">
+      <div id="idle-ad-track" class="idle-ad-track">
+        <!-- Ads rendered by JS -->
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 1: LANGUAGE SELECTION
+  ===================================================== -->
+    <section class="screen" id="screen-language">
+      <div class="screen-content full-width" style="justify-content:center;align-items:center;min-height:100%;">
+        <div style="text-align:center;margin-bottom:20px;">
+          <h1 class="screen-title">Choose Language</h1>
+          <p class="screen-subtitle">भाषा चुनें</p>
+        </div>
+        <div class="language-grid" id="language-grid"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 2: MOVIE BROWSING
+  ===================================================== -->
+    <section class="screen" id="screen-movies">
+      <div
+        style="position:relative;padding-top:56px;height:100%;display:flex;flex-direction:column;padding-left:16px;padding-right:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px 10px;">
+          <div>
+            <h1 class="screen-title">Now Showing 🎬</h1>
+            <p class="screen-subtitle">Tap to book</p>
+          </div>
+          <button class="btn btn-ghost btn-sm"
+            onclick="window.kiosk.showScreen('language'); window.kiosk.sceneManager.transitionTo(window.SCENES.LANGUAGE_SELECTION);"
+            style="padding:6px 12px;font-size:12px;">← Back</button>
+        </div>
+        <div class="movies-scroll-container" id="movies-list"></div>
+        <div style="text-align:center;padding:8px;opacity:0.4;">
+          <span style="font-size:11px;color:var(--text-muted);">↓ Scroll Down ↓</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 3: MOVIE DETAIL
+  ===================================================== -->
+    <section class="screen" id="screen-movie-detail">
+      <div class="screen-content">
+        <div id="movie-detail-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 4: SHOWTIME SELECTION
+  ===================================================== -->
+    <section class="screen" id="screen-showtimes">
+      <div class="screen-content">
+        <div id="showtimes-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 5: TICKET COUNT
+  ===================================================== -->
+    <section class="screen" id="screen-ticket-count">
+      <div class="screen-content" style="justify-content:center;">
+        <div id="ticket-count-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 6: SEAT SELECTION
+  ===================================================== -->
+    <section class="screen" id="screen-seat-selection">
+      <div class="screen-content">
+        <div id="seat-selection-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 7: MOBILE NUMBER
+  ===================================================== -->
+    <section class="screen" id="screen-mobile-number">
+      <div class="screen-content" style="justify-content:center;">
+        <div id="mobile-input-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 8: FOOD & BEVERAGES
+  ===================================================== -->
+    <section class="screen" id="screen-food-beverages">
+      <div class="screen-content">
+        <div id="fnb-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 9: PAYMENT
+  ===================================================== -->
+    <section class="screen" id="screen-payment">
+      <div class="screen-content">
+        <div id="payment-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+       SCREEN 10: SUCCESS / CONFIRMATION
+  ===================================================== -->
+    <section class="screen" id="screen-success">
+      <div class="screen-content" style="justify-content:center;align-items:center;">
+        <div id="success-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== ORDER SUMMARY BAR ====== -->
+    <div id="order-summary-bar" class="hidden">
+      <!-- Rendered by JS -->
+    </div>
+
+  </div>
+
+  <script src="js/mockData.js?v=1.1"></script>
+  <script src="js/scenes.js?v=1.1"></script>
+  <script src="js/kiosk.js?v=1.1"></script>
+</body>
+
+</html>

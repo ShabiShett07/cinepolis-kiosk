@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinepolis Marketing Hub — WhatsApp & SMS Campaigns</title>
+  <meta name="description" content="AI-powered marketing automation dashboard for Cinepolis kiosk retargeting campaigns.">
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    /* Marketing-specific overrides */
+    .campaign-builder { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .wa-preview {
+      background: #0B141A;
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      overflow: hidden;
+    }
+    .wa-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' opacity='0.03'%3E💬%3C/text%3E%3C/svg%3E") repeat;
+      opacity: 0.3;
+    }
+    .wa-header { background: #1F2C34; padding: 12px 16px; border-radius: 10px 10px 0 0; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; position: relative; z-index: 1; }
+    .wa-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--grad-accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #000; }
+    .wa-name { font-weight: 600; font-size: 14px; }
+    .wa-status { font-size: 11px; color: #8B9DA4; }
+    .wa-bubble {
+      background: #1F2C34;
+      border-radius: 8px 8px 8px 0;
+      padding: 12px 14px;
+      max-width: 85%;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #E9EDEF;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 8px;
+    }
+    .wa-bubble-time { font-size: 10px; color: #8B9DA4; text-align: right; margin-top: 4px; }
+    .wa-cta {
+      background: rgba(0,168,132,0.2);
+      border: 1px solid rgba(0,168,132,0.4);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      color: #00A884;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 6px;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+    .funnel-stage { display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--admin-border); }
+    .funnel-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+    .funnel-fill { height: 100%; border-radius: 4px; transition: width 1s var(--spring); }
+    .metric-card { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: var(--radius); padding: 20px; }
+    .campaign-row { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 16px; transition: background 0.2s; }
+    .campaign-row:hover { background: rgba(255,255,255,0.02); }
+    .campaign-row:last-child { border-bottom: none; }
+    .sms-preview { background: #1A1A2E; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 13px; color: #B0B3C1; line-height: 1.6; border: 1px solid rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">✦</div>
+    <div class="logo-text">
+      <div class="logo-name">Cine<span style="color:var(--accent)">polis</span></div>
+      <div class="logo-sub">Marketing Hub</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Campaigns</div>
+    <a class="nav-item active" onclick="showSection('overview')" id="nav-overview"><span class="nav-icon">📊</span> Overview</a>
+    <a class="nav-item" onclick="showSection('create')" id="nav-create"><span class="nav-icon">✏️</span> Create Campaign</a>
+    <a class="nav-item" onclick="showSection('campaigns')" id="nav-campaigns"><span class="nav-icon">📋</span> All Campaigns<span class="nav-badge">12</span></a>
+    <div class="nav-section-label">Channels</div>
+    <a class="nav-item" onclick="showSection('whatsapp')" id="nav-whatsapp"><span class="nav-icon">💬</span> WhatsApp</a>
+    <a class="nav-item" onclick="showSection('sms')" id="nav-sms"><span class="nav-icon">📱</span> SMS</a>
+    <a class="nav-item" onclick="showSection('templates')" id="nav-templates"><span class="nav-icon">📝</span> Templates</a>
+    <div class="nav-section-label">Insights</div>
+    <a class="nav-item" onclick="showSection('analytics')" id="nav-analytics"><span class="nav-icon">📈</span> Analytics</a>
+    <a class="nav-item" onclick="showSection('audience')" id="nav-audience"><span class="nav-icon">👥</span> Audiences</a>
+    <a class="nav-item" onclick="showSection('automation')" id="nav-automation"><span class="nav-icon">⚡</span> Automation Rules</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" onclick="window.location='admin.html'"><span class="nav-icon">🏠</span> Back to Admin</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar">AK</div>
+      <div><div class="admin-name">Arjun Kumar</div><div class="admin-role">Marketing Manager</div></div>
+    </div>
+  </div>
+</aside>
+
+<main id="main">
+  <div id="topbar">
+    <div>
+      <div class="topbar-title" id="section-title">Marketing Overview</div>
+      <div class="topbar-sub">AI-powered retargeting across WhatsApp & SMS</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn">📥 Import Audience</button>
+      <button class="topbar-btn primary" onclick="showSection('create')">+ New Campaign</button>
+    </div>
+  </div>
+  <div id="content" style="padding:28px;"></div>
+</main>
+
+<script>
+// ============================================================
+// Marketing Hub JS
+// ============================================================
+
+const MKTING_DATA = {
+  stats: {
+    sent: 24830, delivered: 23102, opened: 18745, converted: 2341
+  },
+  campaigns: [
+    {id:'C001', name:'Kaal Warrior IMAX Launch', channel:'WhatsApp+SMS', status:'active', audience:'Action Fans', sent:4821, delivered:4782, opened:3921, converted:432, revenue:'₹7.34L', date:'21 Jun 2026'},
+    {id:'C002', name:'Lapsed User Win-Back', channel:'WhatsApp', status:'active', audience:'Lapsed 30d+', sent:3421, delivered:3367, opened:2108, converted:287, revenue:'₹4.12L', date:'20 Jun 2026'},
+    {id:'C003', name:'Golden Lantern Family Pack', channel:'SMS', status:'completed', audience:'Family Segment', sent:1876, delivered:1843, opened:1245, converted:198, revenue:'₹1.98L', date:'19 Jun 2026'},
+    {id:'C004', name:'Weekend Flash Sale', channel:'WhatsApp', status:'scheduled', audience:'All Users', sent:0, delivered:0, opened:0, converted:0, revenue:'₹0', date:'22 Jun 2026'},
+    {id:'C005', name:'Star Nomad IMAX Offer', channel:'WhatsApp+SMS', status:'draft', audience:'IMAX Fans', sent:0, delivered:0, opened:0, converted:0, revenue:'₹0', date:'Draft'}
+  ],
+  templates: [
+    {
+      id:'T001',
+      name:'Movie Launch Announcement',
+      channel:'WhatsApp',
+      body: `🎬 *New Movie Alert!*\n\nHey {name}! 👋\n\n*{movie_title}* is now showing at Cinepolis!\n\n⭐ IMDb: {imdb_rating}/10\n🎭 Genre: {genre}\n⏱ Duration: {duration}\n\n📍 Cinepolis Phoenix Marketcity, Mumbai\n🎟 Book your seats now before they fill up!\n\n👆 Tap below to book instantly`
+    },
+    {
+      id:'T002',
+      name:'Lapsed User Re-engagement',
+      channel:'WhatsApp',
+      body: `🎭 *We miss you, {name}!*\n\nIt's been {days_absent} days since your last visit to Cinepolis.\n\nWe've got some amazing new releases just for you! 🍿\n\n✨ *Special Comeback Offer:*\n20% off your next booking\n\nUse code: *WELCOME20*\nValid till: {expiry_date}\n\n🎬 Check what's showing now:`
+    },
+    {
+      id:'T003',
+      name:'Booking Confirmation',
+      channel:'WhatsApp+SMS',
+      body: `✅ *Booking Confirmed!*\n\nHi {name}, your booking is confirmed! 🎉\n\n🎬 {movie_title}\n🕐 {show_time} · {show_date}\n🎭 {screen_name}\n💺 Seats: {seat_numbers}\n🎟 Booking ID: {booking_id}\n\nEnjoy your movie at Cinepolis! 🍿`
+    },
+    {
+      id:'T004',
+      name:'Flash Deal (SMS)',
+      channel:'SMS',
+      body: `CINPLS: {name}, Flash Deal! 2 IMAX tickets for just ₹999 today only. Book now: cinepolis.com/flash. Valid 6PM-9PM. Reply STOP to opt out.`
+    }
+  ],
+  automations: [
+    {id:'A001', name:'Booking Confirmation Auto-send', trigger:'On successful booking', channel:'WhatsApp+SMS', status:'active', fired:2341},
+    {id:'A002', name:'Lapsed User Win-Back', trigger:'No booking in 30 days', channel:'WhatsApp', status:'active', fired:892},
+    {id:'A003', name:'Reminder 1 Hour Before Show', trigger:'1 hour before showtime', channel:'WhatsApp', status:'active', fired:1823},
+    {id:'A004', name:'Post-Movie Feedback Request', trigger:'30 min after showtime ends', channel:'SMS', status:'paused', fired:0},
+    {id:'A005', name:'Birthday Offer', trigger:'User birthday (3 days before)', channel:'WhatsApp', status:'active', fired:54}
+  ]
+};
+
+function showSection(section) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${section}`);
+  if (navEl) navEl.classList.add('active');
+
+  const titles = {
+    overview: 'Marketing Overview', create: 'Create Campaign', campaigns: 'All Campaigns',
+    whatsapp: 'WhatsApp Campaigns', sms: 'SMS Campaigns', templates: 'Message Templates',
+    analytics: 'Campaign Analytics', audience: 'Audience Manager', automation: 'Automation Rules'
+  };
+  document.getElementById('section-title').textContent = titles[section] || section;
+
+  const renderers = { overview: renderOverview, create: renderCreate, campaigns: renderCampaigns, whatsapp: renderWhatsApp, sms: renderSMS, templates: renderTemplates, analytics: renderAnalytics, audience: renderAudience, automation: renderAutomation };
+  const fn = renderers[section];
+  if (fn) {
+    document.getElementById('content').style.opacity = '0';
+    setTimeout(() => { fn(); document.getElementById('content').style.opacity = '1'; document.getElementById('content').style.transition = 'opacity 0.3s'; }, 100);
+  }
+}
+
+function renderOverview() {
+  const d = MKTING_DATA.stats;
+  const rates = [
+    { label: 'Delivery Rate', val: Math.round(d.delivered/d.sent*100), color: '#00D4AA' },
+    { label: 'Open Rate', val: Math.round(d.opened/d.sent*100), color: '#54A0FF' },
+    { label: 'Click Rate', val: Math.round(d.converted/d.sent*100), color: '#F5A623' }
+  ];
+
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px;">
+      <div class="metric-card"><div class="stat-icon" style="background:rgba(84,160,255,0.1);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;">📤</div><div class="stat-value" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;">${d.sent.toLocaleString()}</div><div class="stat-label" style="font-size:12px;color:var(--text-3);">Total Sent</div></div>
+      <div class="metric-card"><div class="stat-icon" style="background:rgba(0,212,170,0.1);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;">✅</div><div class="stat-value" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--success);">${d.delivered.toLocaleString()}</div><div class="stat-label" style="font-size:12px;color:var(--text-3);">Delivered</div></div>
+      <div class="metric-card"><div class="stat-icon" style="background:rgba(245,166,35,0.1);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;">👁️</div><div class="stat-value" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--accent);">${d.opened.toLocaleString()}</div><div class="stat-label" style="font-size:12px;color:var(--text-3);">Opened</div></div>
+      <div class="metric-card"><div class="stat-icon" style="background:rgba(124,58,237,0.1);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;">🎟</div><div class="stat-value" style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:#A78BFA;">${d.converted.toLocaleString()}</div><div class="stat-label" style="font-size:12px;color:var(--text-3);">Converted</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-bottom:24px;">
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Conversion Funnel</div><div class="chart-sub">Campaign performance pipeline</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${[
+            {stage:'Sent', count:d.sent, pct:100, color:'#54A0FF'},
+            {stage:'Delivered', count:d.delivered, pct:Math.round(d.delivered/d.sent*100), color:'#00D4AA'},
+            {stage:'Opened', count:d.opened, pct:Math.round(d.opened/d.sent*100), color:'#F5A623'},
+            {stage:'Clicked', count:Math.round(d.opened*0.7), pct:Math.round(d.opened*0.7/d.sent*100), color:'#E91E8C'},
+            {stage:'Converted', count:d.converted, pct:Math.round(d.converted/d.sent*100), color:'#7C3AED'}
+          ].map(f => `
+            <div class="funnel-stage">
+              <div style="width:80px;font-size:12px;color:var(--text-2);">${f.stage}</div>
+              <div class="funnel-bar"><div class="funnel-fill" style="width:${f.pct}%;background:${f.color};"></div></div>
+              <div style="width:60px;text-align:right;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;">${f.count.toLocaleString()}</div>
+              <div style="width:44px;text-align:right;font-size:12px;color:var(--text-3);">${f.pct}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Active Campaigns</div><div class="chart-sub">Currently running</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${MKTING_DATA.campaigns.filter(c=>c.status==='active').map(c => `
+            <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div style="font-size:13px;font-weight:600;">${c.name}</div>
+                <span class="badge badge-success">live</span>
+              </div>
+              <div style="display:flex;gap:12px;font-size:11px;color:var(--text-3);">
+                <span>📤 ${c.sent.toLocaleString()}</span>
+                <span>🎟 ${c.converted}</span>
+                <span style="color:var(--accent);font-weight:600;">${c.revenue}</span>
+              </div>
+            </div>
+          `).join('')}
+          <button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="showSection('campaigns')">View All Campaigns →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><div class="chart-title">Recent Campaign Performance</div><div class="chart-sub">Last 5 campaigns by conversion</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="showSection('campaigns')">View All →</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid var(--admin-border);">
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:left;text-transform:uppercase;letter-spacing:1px;">Campaign</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:left;text-transform:uppercase;letter-spacing:1px;">Channel</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:right;text-transform:uppercase;letter-spacing:1px;">Sent</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:right;text-transform:uppercase;letter-spacing:1px;">Open Rate</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:right;text-transform:uppercase;letter-spacing:1px;">Converted</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:right;text-transform:uppercase;letter-spacing:1px;">Revenue</th>
+          <th style="padding:10px 12px;font-size:11px;color:var(--text-3);text-align:left;text-transform:uppercase;letter-spacing:1px;">Status</th>
+        </tr></thead>
+        <tbody>
+          ${MKTING_DATA.campaigns.slice(0,5).map(c => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+              <td style="padding:12px 12px;"><div style="font-size:13px;font-weight:600;color:var(--text-1);">${c.name}</div><div style="font-size:11px;color:var(--text-3);">${c.audience}</div></td>
+              <td style="padding:12px;"><span class="badge badge-${c.channel.includes('WhatsApp')?'success':'info'}">${c.channel}</span></td>
+              <td style="padding:12px;text-align:right;font-size:13px;">${c.sent.toLocaleString()}</td>
+              <td style="padding:12px;text-align:right;font-size:13px;font-weight:600;color:var(--accent);">${c.sent>0?Math.round(c.opened/c.sent*100)+'%':'—'}</td>
+              <td style="padding:12px;text-align:right;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;">${c.converted}</td>
+              <td style="padding:12px;text-align:right;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--accent);">${c.revenue}</td>
+              <td style="padding:12px;"><span class="badge badge-${c.status==='active'?'success':c.status==='completed'?'info':c.status==='scheduled'?'warning':'error'}">${c.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCreate() {
+  let selectedChannel = 'whatsapp';
+  let selectedAudience = 'lapsed';
+  let selectedTemplate = 'T002';
+
+  document.getElementById('content').innerHTML = `
+    <div class="campaign-builder">
+      <div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:16px;">📋 Campaign Details</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group"><label class="form-label">Campaign Name *</label><input class="form-input" id="camp-name" placeholder="e.g. Kaal Warrior Weekend Push" value="Lapsed User Win-Back - June 2026"></div>
+            <div class="form-group">
+              <label class="form-label">Channel *</label>
+              <div style="display:flex;gap:8px;">
+                <button class="btn ${selectedChannel==='whatsapp'?'btn-primary':'btn-ghost'} btn-sm" onclick="selectChannel('whatsapp')" id="ch-whatsapp">💬 WhatsApp</button>
+                <button class="btn ${selectedChannel==='sms'?'btn-primary':'btn-ghost'} btn-sm" onclick="selectChannel('sms')" id="ch-sms">📱 SMS</button>
+                <button class="btn ${selectedChannel==='both'?'btn-primary':'btn-ghost'} btn-sm" onclick="selectChannel('both')" id="ch-both">Both</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Audience Segment *</label>
+              <select class="form-select" id="camp-audience" onchange="updatePreview()">
+                <option value="lapsed">Lapsed Users (30d+) — 3,421 users</option>
+                <option value="action">Action Genre Fans — 2,108 users</option>
+                <option value="family">Family Segment — 1,876 users</option>
+                <option value="imax">IMAX Enthusiasts — 934 users</option>
+                <option value="lastminute">Last-Minute Bookers — 1,245 users</option>
+                <option value="all">All Registered Users — 14,823 users</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message Template</label>
+              <select class="form-select" id="camp-template" onchange="updatePreview()">
+                <option value="T001">Movie Launch Announcement</option>
+                <option value="T002" selected>Lapsed User Re-engagement</option>
+                <option value="T003">Booking Confirmation</option>
+                <option value="T004">Flash Deal (SMS)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:16px;">⏰ Schedule</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Send Type</label>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary btn-sm" id="sched-now">Send Now</button>
+                <button class="btn btn-ghost btn-sm" id="sched-later">Schedule</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" value="2026-06-22"></div>
+              <div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" value="18:00"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:16px;">📊 Estimated Reach</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+            <div style="background:rgba(84,160,255,0.08);border:1px solid rgba(84,160,255,0.2);border-radius:10px;padding:14px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--info);">3,421</div>
+              <div style="font-size:11px;color:var(--text-3);">Recipients</div>
+            </div>
+            <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:10px;padding:14px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--success);">~62%</div>
+              <div style="font-size:11px;color:var(--text-3);">Exp. Open Rate</div>
+            </div>
+            <div style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:14px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">~287</div>
+              <div style="font-size:11px;color:var(--text-3);">Exp. Conversions</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;">
+            <button class="btn btn-primary" style="flex:1;font-size:15px;padding:14px;" onclick="launchCampaign()">🚀 Launch Campaign</button>
+            <button class="btn btn-ghost" onclick="saveDraft()">💾 Save Draft</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:16px;">👁️ Message Preview</div>
+          <div class="wa-preview" id="msg-preview">
+            <div class="wa-header">
+              <div class="wa-avatar">C</div>
+              <div><div class="wa-name">Cinepolis</div><div class="wa-status">✓✓ Business Account</div></div>
+            </div>
+            <div class="wa-bubble">
+              🎭 <b>We miss you, Priya!</b><br><br>
+              It's been 34 days since your last visit to Cinepolis.<br><br>
+              We've got some amazing new releases just for you! 🍿<br><br>
+              ✨ <b>Special Comeback Offer:</b><br>
+              20% off your next booking<br><br>
+              Use code: <b>WELCOME20</b><br>
+              Valid till: 30 Jun 2026<br><br>
+              🎬 Check what's showing now:
+              <div class="wa-bubble-time">6:00 PM ✓✓</div>
+            </div>
+            <div class="wa-cta">📲 Book Now on Cinepolis App</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:16px;">✏️ Edit Message</div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Message Body</label>
+            <textarea class="form-textarea" id="msg-body" rows="10" oninput="livePreview(this.value)">🎭 *We miss you, {name}!*
+
+It's been {days_absent} days since your last visit to Cinepolis.
+
+We've got some amazing new releases just for you! 🍿
+
+✨ *Special Comeback Offer:*
+20% off your next booking
+
+Use code: *WELCOME20*
+Valid till: {expiry_date}
+
+🎬 Check what's showing now:</textarea>
+          </div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">
+            📌 Use variables: {name}, {days_absent}, {movie_title}, {expiry_date}, {booking_id}
+          </div>
+          <div class="form-group"><label class="form-label">CTA Button Text</label><input class="form-input" value="📲 Book Now on Cinepolis App" id="cta-text" oninput="document.querySelector('.wa-cta').textContent=this.value"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCampaigns() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      ${['All','Active','Scheduled','Completed','Draft'].map((f,i) => `
+        <button class="btn ${i===0?'btn-primary':'btn-ghost'} btn-sm">${f}</button>
+      `).join('')}
+    </div>
+    <div class="data-table-wrapper">
+      <div class="data-table-header">
+        <div><div class="chart-title">All Campaigns</div><div class="chart-sub">${MKTING_DATA.campaigns.length} total campaigns</div></div>
+        <button class="btn btn-primary btn-sm" onclick="showSection('create')">+ New Campaign</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Campaign</th><th>Channel</th><th>Audience</th><th>Sent</th><th>Open Rate</th><th>Conversions</th><th>Revenue</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${MKTING_DATA.campaigns.map(c => `
+            <tr>
+              <td>
+                <div class="table-title">${c.name}</div>
+                <div style="font-size:11px;color:var(--text-3);">${c.date}</div>
+              </td>
+              <td><span class="badge badge-${c.channel.includes('WhatsApp')?'success':'info'}">${c.channel}</span></td>
+              <td style="font-size:12px;color:var(--text-3);">${c.audience}</td>
+              <td style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;">${c.sent.toLocaleString()}</td>
+              <td style="font-weight:600;color:var(--accent);">${c.sent>0?Math.round(c.opened/c.sent*100)+'%':'—'}</td>
+              <td style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;">${c.converted}</td>
+              <td style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--accent);">${c.revenue}</td>
+              <td><span class="badge badge-${c.status==='active'?'success':c.status==='completed'?'info':c.status==='scheduled'?'warning':'error'}">${c.status}</span></td>
+              <td>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn btn-ghost btn-sm">📊</button>
+                  ${c.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="showSection('create')">✏️ Edit</button>`:''}
+                  ${c.status==='active'?`<button class="btn btn-danger btn-sm">⏸</button>`:''}
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderTemplates() {
+  document.getElementById('content').innerHTML = `
+    <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div><div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;">Message Templates</div><div style="font-size:12px;color:var(--text-3);">Pre-approved WhatsApp Business API templates</div></div>
+      <button class="btn btn-primary">+ New Template</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+      ${MKTING_DATA.templates.map(t => `
+        <div class="chart-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <div style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;">${t.name}</div>
+              <span class="badge badge-${t.channel.includes('WhatsApp')?'success':'info'}" style="margin-top:4px;">${t.channel}</span>
+            </div>
+            <span class="badge badge-success">Approved</span>
+          </div>
+          <div class="sms-preview">${t.body.replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>')}</div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button class="btn btn-ghost btn-sm" style="flex:1;">✏️ Edit</button>
+            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="showSection('create')">🚀 Use</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderAnalytics() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--success);">93.0%</div><div style="font-size:12px;color:var(--text-3);">WhatsApp Delivery Rate</div></div>
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--accent);">75.5%</div><div style="font-size:12px;color:var(--text-3);">Average Open Rate</div></div>
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:#A78BFA;">9.42%</div><div style="font-size:12px;color:var(--text-3);">Overall Conversion Rate</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Daily Message Volume</div><div class="chart-sub">Sent vs Opened this week</div></div></div>
+        <div class="bar-chart" style="height:140px;">
+          ${[4200,3800,5100,2900,4700,6200,4830].map((v,i)=>`
+            <div class="bar-group">
+              <div class="bar" data-val="${v}" style="height:${(v/6200*120)}px;background:linear-gradient(180deg,#3D1A7A,#1E0A3C);"></div>
+              <div class="bar-label">${['M','T','W','T','F','S','S'][i]}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Best Sending Times</div><div class="chart-sub">Open rate by hour of day</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[['10 AM – 12 PM','72%','#F5A623'],['6 PM – 8 PM','68%','#00D4AA'],['8 PM – 10 PM','65%','#54A0FF'],['12 PM – 2 PM','54%','#7C3AED'],['2 PM – 4 PM','41%','rgba(255,255,255,0.2)']].map(([time,rate,color])=>`
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:120px;font-size:12px;color:var(--text-2);">${time}</div>
+              <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:6px;"><div style="width:${rate};height:100%;background:${color};border-radius:4px;"></div></div>
+              <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:${color};">${rate}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAudience() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;">14,823</div><div style="font-size:12px;color:var(--text-3);">Total Subscribers</div></div>
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--success);">11,247</div><div style="font-size:12px;color:var(--text-3);">WhatsApp Opted In</div></div>
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--info);">13,891</div><div style="font-size:12px;color:var(--text-3);">SMS Opted In</div></div>
+      <div class="metric-card"><div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--error);">1,576</div><div style="font-size:12px;color:var(--text-3);">Opted Out</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      ${[
+        {name:'Lapsed Users',count:3421,desc:'No booking in 30+ days',trend:'↑ 234 new this week',color:'#FF4757'},
+        {name:'Action Fans',count:2108,desc:'Love action & fantasy movies',trend:'Stable',color:'#F5A623'},
+        {name:'Family Segment',count:1876,desc:'Weekend family moviegoers',trend:'↑ 89 new',color:'#00D4AA'},
+        {name:'IMAX Enthusiasts',count:934,desc:'Only book IMAX shows',trend:'↑ 23 new',color:'#54A0FF'},
+        {name:'Last-Minute Bookers',count:1245,desc:'Books within 2hrs of show',trend:'Stable',color:'#7C3AED'},
+        {name:'Star Club Members',count:2341,desc:'Loyalty program members',trend:'↑ 156 new',color:'#E91E8C'}
+      ].map(s => `
+        <div class="metric-card" style="border-left:3px solid ${s.color};">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;">${s.name}</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:${s.color};">${s.count.toLocaleString()}</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">${s.desc}</div>
+          <div style="font-size:11px;color:var(--success);margin-bottom:12px;">${s.trend}</div>
+          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="showSection('create')">📣 Create Campaign</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderAutomation() {
+  document.getElementById('content').innerHTML = `
+    <div class="section-header" style="display:flex;justify-content:space-between;margin-bottom:20px;">
+      <div><div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;">Automation Rules</div><div style="font-size:12px;color:var(--text-3);">Trigger-based message automations</div></div>
+      <button class="btn btn-primary">+ New Automation</button>
+    </div>
+    <div class="data-table-wrapper">
+      <table>
+        <thead><tr><th>Rule Name</th><th>Trigger</th><th>Channel</th><th>Messages Sent</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${MKTING_DATA.automations.map(a => `
+            <tr>
+              <td class="table-title">${a.name}</td>
+              <td style="font-size:12px;color:var(--text-3);">${a.trigger}</td>
+              <td><span class="badge badge-${a.channel.includes('WhatsApp')?'success':'info'}">${a.channel}</span></td>
+              <td style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;">${a.fired.toLocaleString()}</td>
+              <td>
+                <label class="toggle-switch">
+                  <input type="checkbox" ${a.status==='active'?'checked':''}>
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </td>
+              <td><button class="btn btn-ghost btn-sm">✏️ Edit</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderWhatsApp() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">💬</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--success);">11,247</div><div style="font-size:12px;color:var(--text-3);">WA Subscribers</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">📤</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;">18,432</div><div style="font-size:12px;color:var(--text-3);">Sent This Month</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">✅</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--success);">93.2%</div><div style="font-size:12px;color:var(--text-3);">Delivery Rate</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">👁️</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--accent);">76.1%</div><div style="font-size:12px;color:var(--text-3);">Open Rate</div></div>
+    </div>
+    <div class="chart-card"><div class="chart-title" style="margin-bottom:16px;">💬 WhatsApp Business Account</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.2);border-radius:10px;align-items:center;">
+            <span style="font-size:13px;">Connection Status</span><span class="badge badge-success">● Connected</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+            <span style="font-size:13px;">Business Name</span><span style="font-weight:600;">Cinepolis India</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+            <span style="font-size:13px;">Phone Number</span><span style="font-weight:600;">+91 22 6789 0000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+            <span style="font-size:13px;">Daily Message Limit</span><span style="font-weight:600;">100,000</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">Approved Templates</div>
+          ${MKTING_DATA.templates.filter(t=>t.channel.includes('WhatsApp')).map(t=>`
+            <div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:13px;">${t.name}</span><span class="badge badge-success">Approved</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSMS() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">📱</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--info);">13,891</div><div style="font-size:12px;color:var(--text-3);">SMS Subscribers</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">📤</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;">6,398</div><div style="font-size:12px;color:var(--text-3);">Sent This Month</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">✅</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--success);">97.8%</div><div style="font-size:12px;color:var(--text-3);">Delivery Rate</div></div>
+      <div class="metric-card"><div style="font-size:28px;margin-bottom:8px;">💰</div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--accent);">₹0.18</div><div style="font-size:12px;color:var(--text-3);">Cost per SMS</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:16px;">📱 SMS Gateway — Kaleyra</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.2);border-radius:10px;align-items:center;">
+              <span>Gateway Status</span><span class="badge badge-success">● Connected</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+              <span>Sender ID</span><span style="font-weight:600;font-family:monospace;">CINPLS</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+              <span>DLT Registered</span><span class="badge badge-success">Yes</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;align-items:center;">
+              <span>Remaining Credits</span><span style="font-weight:700;color:var(--accent);">48,230</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">SMS Preview</div>
+          <div class="sms-preview">
+            CINPLS: Priya, Flash Deal! 2 IMAX tickets for just ₹999 today only. Book now: cinepolis.com/flash. Valid 6PM-9PM. Reply STOP to opt out.
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Character count: 148/160 · 1 SMS unit</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function launchCampaign() {
+  const name = document.getElementById('camp-name')?.value || 'New Campaign';
+  alert(`✅ Campaign "${name}" launched successfully!\n\nEstimated reach: 3,421 users\nExpected delivery: within 5 minutes`);
+  showSection('campaigns');
+}
+
+function saveDraft() {
+  alert('Campaign saved as draft!');
+}
+
+function updatePreview() {}
+function livePreview(text) {}
+
+// Init
+window.onload = () => renderOverview();
+</script>
+</body>
+</html>

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinepolis Admin Dashboard — CIRA Kiosk Management</title>
+  <meta name="description" content="Admin dashboard for managing Cinepolis kiosk content, movies, ads, and campaign analytics.">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ===================== SIDEBAR ========================= -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">✦</div>
+    <div class="logo-text">
+      <div class="logo-name">Cine<span style="color:var(--accent)">polis</span></div>
+      <div class="logo-sub">Admin Console</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a class="nav-item" onclick="showPage('analytics')" id="nav-analytics">
+      <span class="nav-icon">📈</span> Analytics
+    </a>
+
+    <div class="nav-section-label">Content</div>
+    <a class="nav-item" onclick="showPage('movies')" id="nav-movies">
+      <span class="nav-icon">🎬</span> Movies
+    </a>
+    <a class="nav-item" onclick="showPage('ads')" id="nav-ads">
+      <span class="nav-icon">📺</span> Ad Management
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" onclick="showPage('cira')" id="nav-cira">
+      <span class="nav-icon">🤖</span> Cira Config
+    </a>
+
+    <div class="nav-section-label">Operations</div>
+    <a class="nav-item" onclick="showPage('kiosks')" id="nav-kiosks">
+      <span class="nav-icon">🖥️</span> Kiosk Status
+      <span class="nav-badge nav-badge-success">6</span>
+    </a>
+    <a class="nav-item" onclick="showPage('bookings')" id="nav-bookings">
+      <span class="nav-icon">🎟️</span> Bookings
+    </a>
+    <a class="nav-item" onclick="showPage('fnb')" id="nav-fnb">
+      <span class="nav-icon">🍿</span> F&B Menu
+    </a>
+
+    <div class="nav-section-label">Marketing</div>
+    <a class="nav-item" onclick="window.location='marketing.html'">
+      <span class="nav-icon">📣</span> Campaigns
+    </a>
+    <a class="nav-item" onclick="showPage('audience')" id="nav-audience">
+      <span class="nav-icon">👥</span> Audience
+    </a>
+
+    <div class="nav-section-label">System</div>
+    <a class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> Settings
+    </a>
+    <a class="nav-item" onclick="window.open('index.html','_blank')">
+      <span class="nav-icon">👁️</span> Preview Kiosk
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar">AK</div>
+      <div>
+        <div class="admin-name">Arjun Kumar</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== MAIN ========================= -->
+<main id="main">
+  <div id="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-sub" id="page-sub">Cinepolis Phoenix Marketcity, Mumbai</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+      <button class="topbar-btn" id="export-btn">⬇️ Export</button>
+      <button class="topbar-btn primary" onclick="showPage('movies'); openAddModal()">+ Add Movie</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <!-- Pages rendered by JS -->
+  </div>
+</main>
+
+<!-- ===================== MODAL ========================= -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <!-- Modal content -->
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Admin Dashboard JavaScript
+// ============================================================
+
+// ===================== PAGE ROUTING =====================
+const pages = {
+  dashboard: renderDashboard,
+  analytics: renderAnalytics,
+  movies: renderMovies,
+  ads: renderAds,
+  cira: renderCiraConfig,
+  kiosks: renderKiosks,
+  bookings: renderBookings,
+  fnb: renderFnB,
+  audience: renderAudience,
+  settings: renderSettings
+};
+
+const pageTitles = {
+  dashboard: ['Dashboard', 'Real-time overview of all kiosk operations'],
+  analytics: ['Analytics', 'Performance insights & revenue trends'],
+  movies: ['Movie Management', 'Add, edit and schedule now-showing films'],
+  ads: ['Ad Management', 'Schedule and manage idle-mode advertisement creatives'],
+  cira: ['Cira Configuration', 'Customize CIRA assistant voice, behavior & animations'],
+  kiosks: ['Kiosk Status', 'Monitor all kiosk terminals across locations'],
+  bookings: ['Bookings', 'View and manage all ticket bookings'],
+  fnb: ['F&B Menu Management', 'Update food & beverage offerings and pricing'],
+  audience: ['Audience Segments', 'Customer data and segmentation for targeting'],
+  settings: ['System Settings', 'Configure API keys, integrations and system preferences']
+};
+
+function showPage(page) {
+  // Update active nav
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${page}`);
+  if (navEl) navEl.classList.add('active');
+
+  // Update titles
+  const [title, sub] = pageTitles[page] || [page, ''];
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-sub').textContent = sub;
+
+  // Render page
+  const renderer = pages[page];
+  if (renderer) {
+    document.getElementById('content').style.opacity = '0';
+    setTimeout(() => {
+      renderer();
+      document.getElementById('content').style.opacity = '1';
+      document.getElementById('content').style.transition = 'opacity 0.3s';
+    }, 100);
+  }
+}
+
+// ===================== MOCK DATA =====================
+const ADMIN_DATA = {
+  stats: {
+    todayRevenue: 847650,
+    todayTickets: 2341,
+    activeKiosks: 6,
+    conversionRate: 82.4
+  },
+  weekRevenue: [612000, 785000, 543000, 921000, 734000, 847650, 1023000],
+  weekDays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+  occupancy: { imax: 87, fourDX: 72, premium: 91, regular: 64 },
+  movies: [
+    { id:'m001', title:'Eclipse Protocol', genre:'Action/Sci-Fi', status:'Now Showing', bookings:342, revenue:240750, rating:8.2, poster:'assets/movies/eclipse_protocol.png' },
+    { id:'m002', title:'Dhadkan Se Door', genre:'Romance', status:'Now Showing', bookings:218, revenue:126440, rating:7.8, poster:'assets/movies/dhadkan_se_door.png' },
+    { id:'m003', title:'Star Nomad', genre:'Sci-Fi', status:'Now Showing', bookings:401, revenue:320800, rating:8.6, poster:'assets/movies/star_nomad.png' },
+    { id:'m004', title:'The Golden Lantern', genre:'Animation', status:'Now Showing', bookings:289, revenue:147450, rating:8.9, poster:'assets/movies/golden_lantern.png' },
+    { id:'m005', title:'Whisper in the Dark', genre:'Horror', status:'Now Showing', bookings:156, revenue:94500, rating:7.4, poster:'assets/movies/whisper_in_the_dark.png' },
+    { id:'m006', title:'Kaal Warrior', genre:'Action/Fantasy', status:'Now Showing', bookings:387, revenue:328950, rating:8.4, poster:'assets/movies/kaal_warrior.png' }
+  ],
+  kiosks: [
+    { id:'K001', name:'Entrance Hall - Kiosk 1', status:'online', transactions: 84, uptime:'99.8%', lastSeen:'Just now', location:'Ground Floor' },
+    { id:'K002', name:'Food Court Level - Kiosk 2', status:'online', transactions: 67, uptime:'99.5%', lastSeen:'1 min ago', location:'Level 2' },
+    { id:'K003', name:'Screen Lobby - Kiosk 3', status:'idle', transactions: 12, uptime:'98.2%', lastSeen:'3 min ago', location:'Level 3' },
+    { id:'K004', name:'Entrance Hall - Kiosk 4', status:'online', transactions: 91, uptime:'99.9%', lastSeen:'Just now', location:'Ground Floor' },
+    { id:'K005', name:'IMAX Lobby - Kiosk 5', status:'online', transactions: 54, uptime:'99.7%', lastSeen:'30 sec ago', location:'Level 4' },
+    { id:'K006', name:'VIP Lounge - Kiosk 6', status:'offline', transactions: 0, uptime:'0%', lastSeen:'2 hours ago', location:'Level 5' }
+  ],
+  recentBookings: [
+    { id:'CP87654321', movie:'Kaal Warrior', showtime:'7:30 PM · IMAX', seats:'J4, J5', amount:'₹1,700', status:'confirmed', time:'2 min ago' },
+    { id:'CP87654320', movie:'Star Nomad', showtime:'4:15 PM · Premium', seats:'E8', amount:'₹580', status:'confirmed', time:'4 min ago' },
+    { id:'CP87654319', movie:'Eclipse Protocol', showtime:'6:45 PM · IMAX', seats:'F3, F4, F5', amount:'₹2,250', status:'pending', time:'7 min ago' },
+    { id:'CP87654318', movie:'The Golden Lantern', showtime:'5:30 PM · Screen 4', seats:'B6, B7', amount:'₹500', status:'confirmed', time:'12 min ago' },
+    { id:'CP87654317', movie:'Dhadkan Se Door', showtime:'7:00 PM · Screen 5', seats:'D9', amount:'₹280', status:'cancelled', time:'15 min ago' }
+  ],
+  ads: [
+    { id:'AD001', title:'Book Early, Save More!', type:'Promotional', status:'active', impressions: 1824, screen:'All Kiosks', schedule:'09:00–22:00', color:'#F5A623' },
+    { id:'AD002', title:'IMAX Experience', type:'Feature', status:'active', impressions: 2103, screen:'IMAX Lobby', schedule:'All Day', color:'#00D4AA' },
+    { id:'AD003', title:'Weekend Couple Pass', type:'Promotional', status:'scheduled', impressions: 0, screen:'All Kiosks', schedule:'Fri–Sun 18:00+', color:'#E91E8C' },
+    { id:'AD004', title:'Cinepolis Star Club', type:'Loyalty', status:'paused', impressions: 987, screen:'All Kiosks', schedule:'Paused', color:'#7C3AED' }
+  ]
+};
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  const d = ADMIN_DATA;
+  const maxRev = Math.max(...d.weekRevenue);
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(245,166,35,0.12)">💰</div>
+        <div class="stat-value">₹${(d.stats.todayRevenue/100000).toFixed(2)}L</div>
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-change up">↑ 12.4%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(0,212,170,0.12)">🎟️</div>
+        <div class="stat-value">${d.stats.todayTickets.toLocaleString()}</div>
+        <div class="stat-label">Tickets Sold Today</div>
+        <div class="stat-change up">↑ 8.2%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(84,160,255,0.12)">🖥️</div>
+        <div class="stat-value">${d.stats.activeKiosks}/7</div>
+        <div class="stat-label">Active Kiosks</div>
+        <div class="stat-change down">↓ 1 offline</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(124,58,237,0.12)">✨</div>
+        <div class="stat-value">${d.stats.conversionRate}%</div>
+        <div class="stat-label">Conversion Rate</div>
+        <div class="stat-change up">↑ 3.1%</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Weekly Revenue</div>
+            <div class="chart-sub">Last 7 days · Cinepolis Phoenix Mumbai</div>
+          </div>
+          <select class="form-select" style="width:auto;font-size:12px;padding:6px 10px;">
+            <option>This Week</option><option>Last Week</option>
+          </select>
+        </div>
+        <div class="bar-chart">
+          ${d.weekRevenue.map((rev, i) => `
+            <div class="bar-group">
+              <div class="bar" data-val="₹${(rev/1000).toFixed(0)}K"
+                   style="height:${(rev/maxRev*140)}px;background:linear-gradient(180deg,${i===5?'#F5A623':'#3D1A7A'},${i===5?'#FF6B35':'#1E0A3C'});"
+              ></div>
+              <div class="bar-label">${d.weekDays[i]}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div><div class="chart-title">Screen Occupancy</div><div class="chart-sub">Today's average</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${Object.entries(d.occupancy).map(([screen, pct]) => `
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:4px;">
+                <span>${screen.toUpperCase()}</span><span style="color:var(--accent);font-weight:600;">${pct}%</span>
+              </div>
+              <div style="background:rgba(255,255,255,0.05);border-radius:4px;height:6px;">
+                <div style="width:${pct}%;height:100%;background:${pct>80?'var(--success)':pct>60?'var(--accent)':'var(--info)'};border-radius:4px;transition:width 1s var(--spring);"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;">
+      <div class="data-table-wrapper">
+        <div class="data-table-header">
+          <div>
+            <div class="chart-title">Recent Bookings</div>
+            <div class="chart-sub">Live kiosk transactions</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('bookings')">View All →</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Booking ID</th><th>Movie</th><th>Amount</th><th>Status</th><th>Time</th>
+          </tr></thead>
+          <tbody>
+            ${d.recentBookings.map(b => `
+              <tr>
+                <td><span style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--accent);">${b.id}</span></td>
+                <td><span class="table-title" style="font-size:13px;">${b.movie}</span><br><span style="font-size:11px;color:var(--text-3);">${b.showtime}</span></td>
+                <td style="font-family:'Outfit',sans-serif;font-weight:700;">${b.amount}</td>
+                <td><span class="badge badge-${b.status==='confirmed'?'success':b.status==='pending'?'warning':'error'}">${b.status}</span></td>
+                <td style="color:var(--text-3);font-size:12px;">${b.time}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div><div class="chart-title">Kiosk Status</div><div class="chart-sub">Live terminal health</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('kiosks')">Manage →</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${d.kiosks.map(k => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;">
+              <div class="kiosk-status-dot status-${k.status}"></div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${k.name}</div>
+                <div style="font-size:11px;color:var(--text-3);">${k.transactions} transactions today</div>
+              </div>
+              <div style="font-size:11px;color:${k.status==='online'?'var(--success)':k.status==='idle'?'var(--warning)':'var(--error)'};font-weight:600;text-transform:capitalize;">${k.status}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===================== MOVIES =====================
+function renderMovies() {
+  document.getElementById('content').innerHTML = `
+    <div class="section-header">
+      <div><div class="section-title">Now Showing</div><div class="section-sub">${ADMIN_DATA.movies.length} movies currently active</div></div>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Movie</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      ${ADMIN_DATA.movies.map(m => `
+        <div class="chart-card" style="padding:0;overflow:hidden;">
+          <div style="position:relative;height:180px;">
+            <img src="${m.poster}" style="width:100%;height:100%;object-fit:cover;" alt="${m.title}" onerror="this.style.background='linear-gradient(135deg,#1E0A3C,#3D1A7A)'">
+            <div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,6,16,0.95) 0%,transparent 60%);"></div>
+            <div style="position:absolute;top:12px;right:12px;"><span class="badge badge-success">${m.status}</span></div>
+            <div style="position:absolute;bottom:12px;left:12px;right:12px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;">${m.title}</div>
+              <div style="font-size:11px;color:var(--text-3);">${m.genre}</div>
+            </div>
+          </div>
+          <div style="padding:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;text-align:center;">
+              <div><div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;">${m.bookings}</div><div style="font-size:10px;color:var(--text-3);">Bookings</div></div>
+              <div><div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;">${m.rating}</div><div style="font-size:10px;color:var(--text-3);">IMDb</div></div>
+              <div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--accent);">₹${(m.revenue/1000).toFixed(0)}K</div><div style="font-size:10px;color:var(--text-3);">Revenue</div></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="editMovie('${m.id}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="removeMovie('${m.id}')">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ===================== ADS =====================
+function renderAds() {
+  document.getElementById('content').innerHTML = `
+    <div class="section-header">
+      <div><div class="section-title">Ad Creatives</div><div class="section-sub">Manage idle-mode advertisements across all kiosks</div></div>
+      <button class="btn btn-primary" onclick="openAdModal()">+ New Creative</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:28px;">
+      ${ADMIN_DATA.ads.map(ad => `
+        <div class="chart-card" style="position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${ad.color};"></div>
+          <div style="padding-left:16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+              <div>
+                <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;">${ad.title}</div>
+                <div style="font-size:11px;color:var(--text-3);">${ad.type} · ${ad.screen}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge badge-${ad.status==='active'?'success':ad.status==='scheduled'?'info':'warning'}">${ad.status}</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" ${ad.status==='active'?'checked':''} onchange="toggleAd('${ad.id}', this.checked)">
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+              <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;">
+                <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;">${ad.impressions.toLocaleString()}</div>
+                <div style="font-size:11px;color:var(--text-3);">Impressions Today</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;">
+                <div style="font-size:12px;color:var(--text-2);">${ad.schedule}</div>
+                <div style="font-size:11px;color:var(--text-3);">Schedule</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm">✏️ Edit</button>
+              <button class="btn btn-ghost btn-sm">🔁 Duplicate</button>
+              <button class="btn btn-danger btn-sm">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><div class="chart-title">Ad Schedule Timeline</div><div class="chart-sub">Today's ad playback schedule</div></div>
+      </div>
+      <div style="position:relative;height:80px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:100%;display:flex;align-items:center;">
+          ${['9AM','12PM','3PM','6PM','9PM','12AM'].map((t,i)=>`<div style="position:absolute;left:${i*20}%;font-size:10px;color:var(--text-3);top:4px;">${t}</div>`).join('')}
+          <div style="position:absolute;left:0;top:24px;height:20px;width:100%;background:rgba(0,212,170,0.2);border-radius:4px;"></div>
+          <div style="position:absolute;left:50%;top:48px;height:20px;width:30%;background:rgba(245,166,35,0.3);border-radius:4px;"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===================== KIOSKS =====================
+function renderKiosks() {
+  document.getElementById('content').innerHTML = `
+    <div class="section-header">
+      <div><div class="section-title">Kiosk Terminal Status</div><div class="section-sub">Real-time health monitoring</div></div>
+      <div style="display:flex;gap:8px;">
+        <span class="badge badge-success">● Online: 4</span>
+        <span class="badge badge-warning">● Idle: 1</span>
+        <span class="badge badge-error">● Offline: 1</span>
+      </div>
+    </div>
+    <div class="kiosk-grid">
+      ${ADMIN_DATA.kiosks.map(k => `
+        <div class="kiosk-status-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="kiosk-status-dot status-${k.status}"></div>
+              <div>
+                <div style="font-weight:600;font-size:14px;">${k.name}</div>
+                <div style="font-size:11px;color:var(--text-3);">${k.id} · ${k.location}</div>
+              </div>
+            </div>
+            <span class="badge badge-${k.status==='online'?'success':k.status==='idle'?'warning':'error'}" style="text-transform:capitalize;">${k.status}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;">${k.transactions}</div>
+              <div style="font-size:10px;color:var(--text-3);">Transactions Today</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:${k.status==='online'?'var(--success)':'var(--error)'};">${k.uptime}</div>
+              <div style="font-size:10px;color:var(--text-3);">Uptime</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:var(--text-3);">Last seen: ${k.lastSeen}</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm">📡 Ping</button>
+              ${k.status==='offline'?`<button class="btn btn-primary btn-sm">↩ Restart</button>`:`<button class="btn btn-ghost btn-sm">🖥 View</button>`}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ===================== BOOKINGS =====================
+function renderBookings() {
+  const allBookings = [
+    ...ADMIN_DATA.recentBookings,
+    { id:'CP87654316', movie:'Kaal Warrior', showtime:'12:00 PM · IMAX', seats:'A1,A2,A3,A4', amount:'₹3,400', status:'confirmed', time:'22 min ago' },
+    { id:'CP87654315', movie:'Star Nomad', showtime:'9:00 AM · IMAX', seats:'K12', amount:'₹800', status:'confirmed', time:'1 hr ago' },
+    { id:'CP87654314', movie:'Eclipse Protocol', showtime:'2:00 PM · Premium', seats:'C5,C6', amount:'₹1,100', status:'confirmed', time:'2 hrs ago' }
+  ];
+
+  document.getElementById('content').innerHTML = `
+    <div class="section-header">
+      <div><div class="section-title">All Bookings</div><div class="section-sub">Today · ${allBookings.length} transactions</div></div>
+      <div style="display:flex;gap:8px;">
+        <input class="form-input" placeholder="Search booking ID..." style="width:220px;">
+        <button class="btn btn-ghost">🔍</button>
+      </div>
+    </div>
+    <div class="data-table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Booking ID</th><th>Movie</th><th>Showtime</th><th>Seats</th><th>Amount</th><th>Status</th><th>Time</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${allBookings.map(b => `
+            <tr>
+              <td><span style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--accent);font-size:13px;">${b.id}</span></td>
+              <td class="table-title">${b.movie}</td>
+              <td>${b.showtime}</td>
+              <td><code style="background:rgba(245,166,35,0.1);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:12px;">${b.seats}</code></td>
+              <td style="font-family:'Outfit',sans-serif;font-weight:700;">${b.amount}</td>
+              <td><span class="badge badge-${b.status==='confirmed'?'success':b.status==='pending'?'warning':'error'}">${b.status}</span></td>
+              <td style="color:var(--text-3);font-size:12px;">${b.time}</td>
+              <td><div style="display:flex;gap:4px;"><button class="btn btn-ghost btn-sm">👁</button>${b.status!=='cancelled'?`<button class="btn btn-danger btn-sm">✗</button>`:''}</div></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ===================== CIRA CONFIG =====================
+function renderCiraConfig() {
+  const ttsEngine = localStorage.getItem('cira_tts_engine') || 'prerecorded';
+  const elevenKey = localStorage.getItem('cira_eleven_key') || '';
+  const elevenVoice = localStorage.getItem('cira_eleven_voice') || 'f0JpDwzbGK384Dd1WH2s';
+  const rate = localStorage.getItem('cira_voice_rate') || '0.88';
+  const vol = localStorage.getItem('cira_voice_volume') || '100';
+  const pitch = localStorage.getItem('cira_voice_pitch') || '1.1';
+
+  // Behavior settings
+  const showOnIdle = localStorage.getItem('cira_show_on_idle') === 'true';
+  const enableVoice = localStorage.getItem('cira_enable_voice') !== 'false';
+  const idleReminders = localStorage.getItem('cira_idle_reminders') !== 'false';
+  const namasteGreeting = localStorage.getItem('cira_namaste_greeting') !== 'false';
+  const multilangDetect = localStorage.getItem('cira_multilang_detect') === 'true';
+  const breathing = localStorage.getItem('cira_breathing') !== 'false';
+
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:24px;">
+      <div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:16px;">🎭 Character Preview</div>
+          <div style="text-align:center;background:linear-gradient(135deg,#1E0A3C,#0A0610);border-radius:12px;padding:20px;">
+            <img src="assets/cira/cira_idle.png" style="max-height:280px;object-fit:contain;" alt="Cira">
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:18px;margin-top:12px;">CIRA</div>
+            <div style="font-size:12px;color:var(--text-3);">Cinema AI Retail Assistant</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="previewPose('idle')">Idle</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="previewPose('namaste')">Namaste</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="previewPose('pointing')">Pointing</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="previewPose('celebrate')">Celebrate</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:16px;">🔊 Voice Settings</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">TTS Engine</label>
+              <select class="form-select" id="cira-tts-engine" onchange="toggleTtsFields()">
+                <option value="prerecorded" ${ttsEngine === 'prerecorded' ? 'selected' : ''}>Pre-recorded MP3 Files (Local Scripts)</option>
+                <option value="system" ${ttsEngine === 'system' ? 'selected' : ''}>System Default Voice</option>
+                <option value="elevenlabs" ${ttsEngine === 'elevenlabs' ? 'selected' : ''}>ElevenLabs AI Voice</option>
+              </select>
+            </div>
+            
+            <div id="elevenlabs-fields" style="display: ${ttsEngine === 'elevenlabs' ? 'block' : 'none'}; border-left: 2px solid var(--accent); padding-left: 12px; margin-top: 4px;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label">ElevenLabs API Key *</label>
+                <input type="password" class="form-input" id="cira-eleven-key" value="${elevenKey}" placeholder="Paste ElevenLabs API Key">
+              </div>
+              <div class="form-group">
+                <label class="form-label">ElevenLabs Voice ID *</label>
+                <input type="text" class="form-input" id="cira-eleven-voice" value="${elevenVoice}" placeholder="e.g. f0JpDwzbGK384Dd1WH2s">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Speech Rate: <span id="rate-val">${rate}x</span></label>
+              <input type="range" id="cira-voice-rate" min="0.5" max="1.5" step="0.01" value="${rate}" oninput="document.getElementById('rate-val').textContent=parseFloat(this.value).toFixed(2)+'x'" style="width:100%;accent-color:var(--accent);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Volume: <span id="vol-val">${vol}%</span></label>
+              <input type="range" id="cira-voice-volume" min="0" max="100" step="1" value="${vol}" oninput="document.getElementById('vol-val').textContent=this.value+'%'" style="width:100%;accent-color:var(--accent);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pitch: <span id="pitch-val">${parseFloat(pitch).toFixed(2)}</span></label>
+              <input type="range" id="cira-voice-pitch" min="0.5" max="2" step="0.01" value="${pitch}" oninput="document.getElementById('pitch-val').textContent=parseFloat(this.value).toFixed(2)" style="width:100%;accent-color:var(--accent);">
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:16px;">⚙️ Behavior Settings</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Show Cira on Idle Screen</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-show-on-idle" ${showOnIdle ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Enable Voice Greetings</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-enable-voice" ${enableVoice ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Idle Prompt Reminders</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-idle-reminders" ${idleReminders ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Namaste Gesture on Greeting</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-namaste-greeting" ${namasteGreeting ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Multi-language Auto-Detect</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-multilang-detect" ${multilangDetect ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">Cira Breathing Animation</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cira-breathing" ${breathing ? 'checked' : ''}>
+                <div class="toggle-track"></div><div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <button class="btn btn-primary" style="width:100%;" onclick="saveCiraSettings()">💾 Save Cira Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTtsFields() {
+  const engine = document.getElementById('cira-tts-engine').value;
+  const fields = document.getElementById('elevenlabs-fields');
+  if (fields) {
+    fields.style.display = engine === 'elevenlabs' ? 'block' : 'none';
+  }
+}
+
+function saveCiraSettings() {
+  const ttsEngine = document.getElementById('cira-tts-engine').value;
+  localStorage.setItem('cira_tts_engine', ttsEngine);
+  
+  if (ttsEngine === 'elevenlabs') {
+    const key = document.getElementById('cira-eleven-key').value.trim();
+    const voice = document.getElementById('cira-eleven-voice').value.trim();
+    if (!key) {
+      alert('Please enter your ElevenLabs API Key to enable ElevenLabs TTS.');
+      return;
+    }
+    localStorage.setItem('cira_eleven_key', key);
+    localStorage.setItem('cira_eleven_voice', voice || 'f0JpDwzbGK384Dd1WH2s');
+  }
+
+  localStorage.setItem('cira_voice_rate', document.getElementById('cira-voice-rate').value);
+  localStorage.setItem('cira_voice_volume', document.getElementById('cira-voice-volume').value);
+  localStorage.setItem('cira_voice_pitch', document.getElementById('cira-voice-pitch').value);
+
+  localStorage.setItem('cira_show_on_idle', document.getElementById('cira-show-on-idle').checked);
+  localStorage.setItem('cira_enable_voice', document.getElementById('cira-enable-voice').checked);
+  localStorage.setItem('cira_idle_reminders', document.getElementById('cira-idle-reminders').checked);
+  localStorage.setItem('cira_namaste_greeting', document.getElementById('cira-namaste-greeting').checked);
+  localStorage.setItem('cira_multilang_detect', document.getElementById('cira-multilang-detect').checked);
+  localStorage.setItem('cira_breathing', document.getElementById('cira-breathing').checked);
+
+  alert('Cira configuration saved successfully!');
+}
+
+// ===================== ANALYTICS =====================
+function renderAnalytics() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(245,166,35,0.1)">📅</div><div class="stat-value">₹58.4L</div><div class="stat-label">Month Revenue</div><div class="stat-change up">↑ 18.2%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(0,212,170,0.1)">🎟</div><div class="stat-value">18,234</div><div class="stat-label">Monthly Tickets</div><div class="stat-change up">↑ 11.5%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(84,160,255,0.1)">⏱</div><div class="stat-value">2m 34s</div><div class="stat-label">Avg Booking Time</div><div class="stat-change down">↑ 12s faster</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Top Performing Movies</div><div class="chart-sub">By revenue this month</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${ADMIN_DATA.movies.sort((a,b)=>b.revenue-a.revenue).map((m,i) => `
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:var(--text-3);width:24px;">${i+1}</div>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:600;">${m.title}</div>
+                <div style="background:rgba(255,255,255,0.05);border-radius:3px;height:4px;margin-top:4px;">
+                  <div style="width:${(m.revenue/328950*100).toFixed(0)}%;height:100%;background:var(--grad-accent);border-radius:3px;"></div>
+                </div>
+              </div>
+              <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--accent);font-size:14px;">₹${(m.revenue/1000).toFixed(0)}K</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div><div class="chart-title">Genre Popularity</div><div class="chart-sub">Ticket share by genre</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${[['Action/Fantasy','32%','#F5A623'],['Sci-Fi','26%','#54A0FF'],['Romance','18%','#E91E8C'],['Animation','15%','#00D4AA'],['Horror','9%','#FF4757']].map(([g,pct,c])=>`
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:12px;height:12px;border-radius:3px;background:${c};flex-shrink:0;"></div>
+              <div style="flex:1;font-size:13px;">${g}</div>
+              <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;">${pct}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===================== F&B =====================
+function renderFnB() {
+  const menu = [
+    {emoji:'🍿',name:'Large Popcorn',price:280,sales:423,category:'Popcorn'},
+    {emoji:'🎬',name:'Combo Meal (L)',price:540,sales:312,category:'Combos'},
+    {emoji:'🌮',name:'Nachos + Dip',price:220,sales:267,category:'Snacks'},
+    {emoji:'🥤',name:'Large Cold Drink',price:160,sales:389,category:'Beverages'},
+    {emoji:'🌭',name:'Hot Dog',price:190,sales:198,category:'Snacks'},
+    {emoji:'🍫',name:'Chocolate Brownie',price:240,sales:143,category:'Desserts'}
+  ];
+
+  document.getElementById('content').innerHTML = `
+    <div class="section-header">
+      <div><div class="section-title">F&B Menu Management</div><div class="section-sub">Update items, pricing and availability</div></div>
+      <button class="btn btn-primary">+ Add Item</button>
+    </div>
+    <div class="data-table-wrapper">
+      <table>
+        <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Today's Sales</th><th>Revenue</th><th>Available</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${menu.map(item => `
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">${item.emoji}</span><span class="table-title">${item.name}</span></div></td>
+              <td><span class="badge badge-info">${item.category}</span></td>
+              <td style="font-family:'Outfit',sans-serif;font-weight:700;">₹${item.price}</td>
+              <td>${item.sales} sold</td>
+              <td style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--accent);">₹${(item.price*item.sales).toLocaleString()}</td>
+              <td><label class="toggle-switch"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></td>
+              <td><button class="btn btn-ghost btn-sm">✏️</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ===================== AUDIENCE =====================
+function renderAudience() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(124,58,237,0.1)">👥</div><div class="stat-value">14,823</div><div class="stat-label">Total Registered Users</div><div class="stat-change up">↑ 234 this week</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(245,166,35,0.1)">🔄</div><div class="stat-value">68.2%</div><div class="stat-label">Repeat Customers</div><div class="stat-change up">↑ 4.1%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(0,212,170,0.1)">⭐</div><div class="stat-value">2,341</div><div class="stat-label">Star Club Members</div><div class="stat-change up">↑ 89 new</div></div>
+    </div>
+    <div class="section-header"><div class="section-title">Audience Segments</div><button class="btn btn-primary">+ New Segment</button></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+      ${[
+        {name:'Lapsed Users',desc:'No booking in 30+ days',count:3421,action:'Retarget via WhatsApp',color:'#FF4757'},
+        {name:'Action Genre Fans',desc:'Booked 2+ action movies',count:2108,action:'Promote Kaal Warrior',color:'#F5A623'},
+        {name:'Family Segment',desc:'Weekend matinee bookers',count:1876,action:'Golden Lantern offer',color:'#00D4AA'},
+        {name:'IMAX Enthusiasts',desc:'Exclusively book IMAX',count:934,action:'Star Nomad IMAX push',color:'#54A0FF'},
+        {name:'Last-Minute Bookers',desc:'Books within 2 hrs of show',count:1245,action:'Flash deal campaigns',color:'#7C3AED'},
+        {name:'Star Club Elite',desc:'100+ points earned',count:287,action:'VIP exclusive offers',color:'#E91E8C'}
+      ].map(s => `
+        <div class="chart-card" style="border-left:3px solid ${s.color};">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;">${s.name}</div>
+              <div style="font-size:12px;color:var(--text-3);">${s.desc}</div>
+            </div>
+            <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:${s.color};">${s.count.toLocaleString()}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;font-size:12px;color:var(--text-2);margin-bottom:12px;">
+            💡 Suggestion: ${s.action}
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" style="flex:1;">View Users</button>
+            <button class="btn btn-primary btn-sm" onclick="window.location='marketing.html'">📣 Campaign</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ===================== SETTINGS =====================
+function renderSettings() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px;">🔗 Vista API Integration</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="form-group"><label class="form-label">Vista API Endpoint</label><input class="form-input" value="https://vista-api.cinepolis.com/v2/" type="text"></div>
+          <div class="form-group"><label class="form-label">API Key</label><input class="form-input" value="••••••••••••••••••••••••••••••••" type="password"></div>
+          <div class="form-group"><label class="form-label">Cinema ID</label><input class="form-input" value="CP-MUM-PHX-001" type="text"></div>
+          <button class="btn btn-primary">Test Connection</button>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px;">📱 WhatsApp Business</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="form-group"><label class="form-label">Phone Number ID</label><input class="form-input" placeholder="Enter phone number ID" type="text"></div>
+          <div class="form-group"><label class="form-label">Access Token</label><input class="form-input" placeholder="Enter access token" type="password"></div>
+          <div class="form-group"><label class="form-label">Business Account ID</label><input class="form-input" placeholder="Enter business account ID" type="text"></div>
+          <button class="btn btn-primary">Connect WhatsApp</button>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px;">💬 SMS Gateway</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="form-group"><label class="form-label">Provider</label><select class="form-select"><option>Kaleyra</option><option>Textlocal</option><option>MSG91</option></select></div>
+          <div class="form-group"><label class="form-label">API Key</label><input class="form-input" placeholder="Enter SMS API key" type="password"></div>
+          <div class="form-group"><label class="form-label">Sender ID</label><input class="form-input" value="CINPLS" type="text"></div>
+          <button class="btn btn-primary">Test SMS</button>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px;">⚙️ System Preferences</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${[['Auto-reset kiosk after inactivity (60s)', true],['Daily revenue reports via email', true],['Kiosk offline alerts', true],['Debug mode', false],['Maintenance mode', false]].map(([label,checked])=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-2);">${label}</span>
+              <label class="toggle-switch"><input type="checkbox" ${checked?'checked':''}><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+          `).join('')}
+          <button class="btn btn-primary" style="margin-top:8px;">💾 Save Settings</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===================== MODALS =====================
+function openAddModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">+ Add New Movie</div>
+    <div class="modal-sub">Add a new film to the kiosk now-showing catalogue</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Movie Title *</label><input class="form-input" placeholder="e.g. Kaal Warrior 2"></div>
+      <div class="form-group"><label class="form-label">Genre</label><input class="form-input" placeholder="Action, Drama..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Language</label><select class="form-select"><option>Hindi</option><option>English</option><option>Tamil</option><option>Telugu</option></select></div>
+      <div class="form-group"><label class="form-label">Duration</label><input class="form-input" placeholder="e.g. 2h 30m"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Rating</label><select class="form-select"><option>U</option><option>U/A</option><option>A</option></select></div>
+      <div class="form-group"><label class="form-label">IMDb Rating</label><input class="form-input" type="number" min="1" max="10" step="0.1" placeholder="e.g. 8.5"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;"><label class="form-label">Synopsis</label><textarea class="form-textarea" placeholder="Brief movie description..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Regular Price (₹)</label><input class="form-input" type="number" placeholder="280"></div>
+      <div class="form-group"><label class="form-label">IMAX Price (₹)</label><input class="form-input" type="number" placeholder="750"></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addMovie()">✓ Add Movie</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openAdModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">+ New Ad Creative</div>
+    <div class="modal-sub">Create a new advertisement for kiosk idle mode</div>
+    <div class="form-group" style="margin-bottom:14px;"><label class="form-label">Ad Title *</label><input class="form-input" placeholder="e.g. Weekend Special Offer"></div>
+    <div class="form-group" style="margin-bottom:14px;"><label class="form-label">Subtitle/Message</label><input class="form-input" placeholder="e.g. Book any movie this weekend and save 20%"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Ad Type</label><select class="form-select"><option>Promotional</option><option>Feature</option><option>Loyalty</option><option>Seasonal</option></select></div>
+      <div class="form-group"><label class="form-label">Target Kiosks</label><select class="form-select"><option>All Kiosks</option><option>Entrance Hall</option><option>IMAX Lobby</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start Time</label><input class="form-input" type="time" value="09:00"></div>
+      <div class="form-group"><label class="form-label">End Time</label><input class="form-input" type="time" value="22:00"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:20px;"><label class="form-label">Accent Color</label><input type="color" value="#F5A623" style="width:100%;height:40px;border:none;border-radius:8px;cursor:pointer;background:none;"></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal()">✓ Create Ad</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+function addMovie() {
+  closeModal();
+  alert('Movie added successfully! (Demo mode)');
+}
+
+function editMovie(id) {
+  openAddModal();
+  document.querySelector('.modal-title').textContent = '✏️ Edit Movie';
+}
+
+function removeMovie(id) {
+  if (confirm('Remove this movie from now-showing?')) {
+    ADMIN_DATA.movies = ADMIN_DATA.movies.filter(m => m.id !== id);
+    renderMovies();
+  }
+}
+
+function toggleAd(id, enabled) {
+  const ad = ADMIN_DATA.ads.find(a => a.id === id);
+  if (ad) ad.status = enabled ? 'active' : 'paused';
+}
+
+function previewPose(pose) {
+  const img = document.querySelector('.chart-card img');
+  if (!img) return;
+  const poses = { idle: 'assets/cira/cira_idle.png', namaste: 'assets/cira/cira_namaste.png', pointing: 'assets/cira/cira_pointing.png', celebrate: 'assets/cira/cira_celebrate.png' };
+  img.style.opacity = '0';
+  setTimeout(() => { img.src = poses[pose] || poses.idle; img.style.opacity = '1'; img.style.transition = 'opacity 0.3s'; }, 200);
+}
+
+function refreshData() {
+  ADMIN_DATA.stats.todayRevenue += Math.floor(Math.random() * 5000);
+  ADMIN_DATA.stats.todayTickets += Math.floor(Math.random() * 5);
+  const currentPage = document.getElementById('page-title').textContent;
+  if (currentPage === 'Dashboard') renderDashboard();
+}
+
+// ===================== INIT =====================
+window.onload = () => {
+  renderDashboard();
+};
+</script>
+</body>
+</html>
