@@ -170,6 +170,12 @@ class CiraSceneManager {
     // Remove all pose classes
     ciraEl.classList.remove('pose-idle', 'pose-namaste', 'pose-pointing', 'pose-celebrate', 'cira-hidden');
 
+    if (scene === SCENES.USER_DETECTED || scene === SCENES.NAMASTE_GREETING) {
+      ciraEl.classList.add('cira-centered');
+    } else {
+      ciraEl.classList.remove('cira-centered');
+    }
+
     if (pose === null) {
       ciraEl.classList.add('cira-hidden');
       return;

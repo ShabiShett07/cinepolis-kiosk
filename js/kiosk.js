@@ -47,6 +47,8 @@ class CinemaKiosk {
     const container = document.getElementById('idle-ad-track');
     if (!container) return;
 
+    container.style.opacity = '1';
+
     container.innerHTML = ads.map((ad, i) => `
       <div class="idle-ad-slide ${i === 0 ? 'active' : ''}" id="ad-slide-${i}">
         <div style="position:absolute;inset:0;background:linear-gradient(135deg, #ffffff 0%, #f4f5f8 60%, ${ad.color}15 100%);"></div>
@@ -108,6 +110,11 @@ class CinemaKiosk {
   // ===================== SCENE TRANSITIONS =====================
   onUserDetected() {
     this.stopIdleAds();
+    const container = document.getElementById('idle-ad-track');
+    if (container) {
+      container.style.transition = 'opacity 0.6s ease';
+      container.style.opacity = '0';
+    }
     this.sceneManager.transitionTo(SCENES.USER_DETECTED);
     setTimeout(() => {
       this.sceneManager.transitionTo(SCENES.NAMASTE_GREETING, null, () => {
