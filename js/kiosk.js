@@ -67,10 +67,10 @@ class CinemaKiosk {
     container.style.opacity = '1';
 
     if (ads.length === 0) {
+      document.body.classList.remove('video-playing');
       container.innerHTML = `
-        <div class="idle-ad-slide active">
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg, #1e0a3c 0%, #0a0515 100%);"></div>
-          <div class="idle-overlay">
+        <div class="idle-ad-slide active" style="background:#ffffff;">
+          <div class="idle-overlay" style="background:transparent;">
             <div class="idle-tap-prompt">
               <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
                 <div class="idle-tap-inner">👆</div>
@@ -100,6 +100,7 @@ class CinemaKiosk {
     });
 
     const playVideo = async (index) => {
+      document.body.classList.add('video-playing');
       if (this.adTimeout) clearTimeout(this.adTimeout);
       const ad = ads[index];
       const fit = ad.aspectRatio || 'cover';
@@ -175,6 +176,7 @@ class CinemaKiosk {
   }
 
   stopIdleAds() {
+    document.body.classList.remove('video-playing');
     if (this.adTimeout) {
       clearTimeout(this.adTimeout);
       this.adTimeout = null;
