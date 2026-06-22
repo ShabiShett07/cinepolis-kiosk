@@ -237,8 +237,8 @@ const MOCK_DATA = {
     return [
       { 
         id: "v001", 
-        title: "Cinema Popcorn Loop", 
-        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-popcorn-in-a-red-and-white-striped-bucket-43187-large.mp4", 
+        title: "Eclipse Protocol Trailer", 
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", 
         duration: "15s", 
         status: "active",
         aspectRatio: "cover",
@@ -249,8 +249,8 @@ const MOCK_DATA = {
       },
       { 
         id: "v002", 
-        title: "Vintage Projector Loop", 
-        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-film-projector-in-a-dark-room-43188-large.mp4", 
+        title: "Kaal Warrior Teaser", 
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", 
         duration: "20s", 
         status: "active",
         aspectRatio: "contain",
@@ -261,8 +261,8 @@ const MOCK_DATA = {
       },
       { 
         id: "v003", 
-        title: "Empty Cinema Hall Loop", 
-        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-movie-theater-with-empty-seats-43189-large.mp4", 
+        title: "Star Nomad Teaser", 
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", 
         duration: "25s", 
         status: "active",
         aspectRatio: "cover",
