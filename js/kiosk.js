@@ -86,15 +86,42 @@ class CinemaKiosk {
 
     this.currentAdIndex = 0;
 
-    const playVideo = (index) => {
+    // IndexedDB helper (mirrors admin.html VideoDB)
+    const getVideoBlob = (id) => new Promise((resolve) => {
+      const req = indexedDB.open('CinepolisMedia', 1);
+      req.onsuccess = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('videos')) { resolve(null); return; }
+        const r = db.transaction('videos').objectStore('videos').get(id);
+        r.onsuccess = ev => resolve(ev.target.result ? ev.target.result.blob : null);
+        r.onerror = () => resolve(null);
+      };
+      req.onerror = () => resolve(null);
+    });
+
+    const playVideo = async (index) => {
       if (this.adTimeout) clearTimeout(this.adTimeout);
       const ad = ads[index];
       const fit = ad.aspectRatio || 'cover';
-      
+
+      // Resolve video URL (supports idb:// local blobs)
+      let videoSrc = ad.videoUrl;
+      if (videoSrc && videoSrc.startsWith('idb://')) {
+        const blob = await getVideoBlob(ad.id);
+        videoSrc = blob ? URL.createObjectURL(blob) : null;
+      }
+
+      if (!videoSrc) {
+        // Skip this ad if source unavailable
+        this.currentAdIndex = (this.currentAdIndex + 1) % ads.length;
+        playVideo(this.currentAdIndex);
+        return;
+      }
+
       container.innerHTML = `
         <div class="idle-ad-slide active" style="width:100%;height:100%;position:relative;background:#000;overflow:hidden;">
           <video id="idle-ad-video" autoplay playsinline style="width:100%;height:100%;object-fit:${fit};opacity:0.65;position:absolute;inset:0;">
-            <source src="${ad.videoUrl}" type="video/mp4">
+            <source src="${videoSrc}" type="video/mp4">
           </video>
           <div class="idle-overlay" style="z-index:2;position:relative;">
             <div class="idle-tap-prompt">

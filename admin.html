@@ -706,16 +706,22 @@
 
       <div class="form-group" style="margin-top: 8px;">
         <label>Video File Source</label>
-        <div class="drop-zone" onclick="simulateUpload()">
-          <div class="drop-zone-text" id="drop-zone-main">Select Movie Clip File or Drag & Drop Here</div>
-          <div class="drop-zone-sub" id="drop-zone-sub">Supports MP4, WebM (Max 50MB)</div>
+        <!-- Hidden real file input -->
+        <input type="file" id="local-file-input" accept="video/mp4,video/webm,video/*" style="display:none" onchange="handleLocalFile(this.files[0])">
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('local-file-input').click()" 
+          ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" 
+          ondragleave="this.style.borderColor='';" 
+          ondrop="event.preventDefault(); this.style.borderColor=''; handleLocalFile(event.dataTransfer.files[0]);">
+          <div style="font-size:20px; margin-bottom:6px;">📁</div>
+          <div class="drop-zone-text" id="drop-zone-main">Click to Browse Local Video File</div>
+          <div class="drop-zone-sub" id="drop-zone-sub">Drag &amp; Drop supported · MP4, WebM · Any size</div>
         </div>
         <input type="hidden" id="clip-url">
       </div>
 
       <div class="form-group">
-        <label for="clip-manual-url">Or Paste Source URL</label>
-        <input type="text" id="clip-manual-url" class="form-input" placeholder="https://domain.com/trailer.mp4" oninput="handleUrlInput()">
+        <label for="clip-manual-url">Or Paste Remote Source URL</label>
+        <input type="text" id="clip-manual-url" class="form-input" placeholder="https://domain.com/trailer.mp4" oninput="handleUrlInput()">  
       </div>
 
       <button class="btn-console primary" style="width:100%; justify-content:center; padding:12px; margin-top:12px;" onclick="addClip()">Publish Clip & Deploy to Terminals</button>
@@ -785,8 +791,59 @@
 
   <script>
     let ads = [];
+    let pendingLocalFile = null; // holds { file, blobUrl, sizeLabel } until clip is published
     const fitOptions = ['cover', 'contain', 'fill'];
     const audioOptions = ['muted', 'low', 'medium', 'high'];
+
+    /* ── IndexedDB helper for persisting local video blobs ── */
+    const VideoDB = {
+      _db: null,
+      async open() {
+        if (this._db) return this._db;
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open('CinepolisMedia', 1);
+          req.onupgradeneeded = e => e.target.result.createObjectStore('videos', { keyPath: 'id' });
+          req.onsuccess = e => { this._db = e.target.result; resolve(this._db); };
+          req.onerror = e => reject(e.target.error);
+        });
+      },
+      async save(id, blob) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('videos', 'readwrite');
+          tx.objectStore('videos').put({ id, blob });
+          tx.oncomplete = resolve;
+          tx.onerror = e => reject(e.target.error);
+        });
+      },
+      async getBlob(id) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const req = db.transaction('videos').objectStore('videos').get(id);
+          req.onsuccess = e => resolve(e.target.result ? e.target.result.blob : null);
+          req.onerror = e => reject(e.target.error);
+        });
+      },
+      async remove(id) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('videos', 'readwrite');
+          tx.objectStore('videos').delete(id);
+          tx.oncomplete = resolve;
+          tx.onerror = e => reject(e.target.error);
+        });
+      }
+    };
+
+    /* Resolve a blob URL for an ad (handles idb:// and regular URLs) */
+    async function resolveVideoUrl(ad) {
+      if (ad.videoUrl && ad.videoUrl.startsWith('idb://')) {
+        const blob = await VideoDB.getBlob(ad.id);
+        if (blob) return URL.createObjectURL(blob);
+        return null;
+      }
+      return ad.videoUrl || null;
+    }
 
     function init() {
       loadClips();
@@ -887,7 +944,6 @@
       const fit = ad.aspectRatio || 'cover';
       const vol = ad.volume || 'muted';
 
-      // Show loading state
       screen.innerHTML = `
         <div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
           <div style="width:24px;height:24px;border:2px solid rgba(245,166,35,0.3);border-top-color:#F5A623;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
@@ -895,62 +951,51 @@
         </div>
       `;
 
-      // Inject a fresh video element to avoid stale src/load state
-      const video = document.createElement('video');
-      video.muted = true; // always start muted for autoplay compliance
-      video.loop = true;
-      video.playsInline = true;
-      video.setAttribute('playsinline', '');
-      video.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${fit};display:block;opacity:0;transition:opacity 0.5s ease;`;
-      // Note: crossOrigin not set — not needed for plain video playback (only required for canvas operations)
-      video.src = ad.videoUrl;
+      resolveVideoUrl(ad).then(url => {
+        if (!url) {
+          screen.innerHTML = `<div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;"><span style="color:#EF4444;font-size:10px;font-weight:700;">VIDEO NOT FOUND</span><span style="color:#64748B;font-size:8px;text-align:center;">Local file may have been removed from IndexedDB.</span></div>`;
+          return;
+        }
 
-      // Overlay
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:20px;background:linear-gradient(to top, rgba(30,10,60,0.9) 0%, rgba(30,10,60,0) 60%);pointer-events:none;z-index:5;`;
-      overlay.innerHTML = `
-        <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:#FFFFFF;text-align:center;margin-bottom:2px;">${ad.title}</div>
-        <div style="font-size:8px;color:rgba(255,255,255,0.7);margin-bottom:10px;">${ad.duration} Loop</div>
-        <div style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(245,166,35,0.6);display:flex;align-items:center;justify-content:center;background:rgba(245,166,35,0.1);font-size:9px;">👆</div>
-      `;
+        const video = document.createElement('video');
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${fit};display:block;opacity:0;transition:opacity 0.5s ease;`;
+        video.src = url;
 
-      video.addEventListener('loadeddata', () => {
-        // Clear loading spinner and inject real video + overlay
-        screen.innerHTML = '';
-        screen.appendChild(video);
-        screen.appendChild(overlay);
-
-        // Apply volume settings after autoplay completes
-        video.play().then(() => {
-          video.style.opacity = '1';
-          if (vol !== 'muted') {
-            video.muted = false;
-            if (vol === 'low') video.volume = 0.15;
-            else if (vol === 'medium') video.volume = 0.40;
-            else if (vol === 'high') video.volume = 0.80;
-          }
-        }).catch(() => {
-          // Fallback: keep muted, still show video
-          video.muted = true;
-          video.play().catch(() => {});
-          video.style.opacity = '1';
-        });
-      });
-
-      video.addEventListener('error', () => {
-        screen.innerHTML = `
-          <div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;">
-            <span style="color:#EF4444;font-size:10px;font-weight:700;">VIDEO LOAD ERROR</span>
-            <span style="color:#64748B;font-size:8px;text-align:center;">Check CORS or network. URL may be blocked.</span>
-          </div>
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:20px;background:linear-gradient(to top, rgba(30,10,60,0.9) 0%, rgba(30,10,60,0) 60%);pointer-events:none;z-index:5;`;
+        overlay.innerHTML = `
+          <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:#FFFFFF;text-align:center;margin-bottom:2px;">${ad.title}</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.7);margin-bottom:10px;">${ad.duration} Loop</div>
+          <div style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(245,166,35,0.6);display:flex;align-items:center;justify-content:center;background:rgba(245,166,35,0.1);font-size:9px;">👆</div>
         `;
-        appendLog(`[ERROR] Simulator failed to load: "${ad.title}". Check network/CORS policy.`);
+
+        video.addEventListener('loadeddata', () => {
+          screen.innerHTML = '';
+          screen.appendChild(video);
+          screen.appendChild(overlay);
+          video.play().then(() => {
+            video.style.opacity = '1';
+            if (vol !== 'muted') {
+              video.muted = false;
+              if (vol === 'low') video.volume = 0.15;
+              else if (vol === 'medium') video.volume = 0.40;
+              else if (vol === 'high') video.volume = 0.80;
+            }
+          }).catch(() => { video.muted = true; video.play().catch(() => {}); video.style.opacity = '1'; });
+        });
+
+        video.addEventListener('error', () => {
+          screen.innerHTML = `<div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;"><span style="color:#EF4444;font-size:10px;font-weight:700;">VIDEO LOAD ERROR</span><span style="color:#64748B;font-size:8px;text-align:center;">Check network or try re-uploading the file.</span></div>`;
+          appendLog(`[ERROR] Simulator failed to load: "${ad.title}".`);
+        });
+
+        video.load();
+        appendLog(`[PREVIEW] Streaming "${ad.title}" into vertical simulator (Fit: ${fit}, Audio: ${vol}).`);
       });
-
-      // Trigger load
-      video.load();
-
-      appendLog(`[PREVIEW] Streaming "${ad.title}" into vertical simulator (Fit: ${fit}, Audio: ${vol}).`);
     }
 
     function toggleStatus(id) {
@@ -1007,52 +1052,107 @@
       }
     }
 
-    function simulateUpload() {
-      // No auto-populate samples — highlight the URL field for manual entry
-      const urlInput = document.getElementById('clip-manual-url');
-      document.getElementById('drop-zone-main').textContent = 'Paste a direct video URL in the field below';
-      document.getElementById('drop-zone-sub').textContent = 'Supports any publicly accessible MP4 or WebM link';
-      if (urlInput) {
-        urlInput.focus();
-        urlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    function handleLocalFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('video/')) {
+        showToast('Please select a valid video file (MP4 or WebM)');
+        return;
       }
-      appendLog('[UPLOAD] Drop zone clicked. Awaiting manual URL input from operator.');
+
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const blobUrl = URL.createObjectURL(file);
+
+      // Store pending file info; actual IndexedDB save happens on Publish
+      pendingLocalFile = { file, blobUrl, sizeLabel: sizeMB + ' MB' };
+
+      // Auto-fill campaign name from filename
+      const nameEl = document.getElementById('clip-title');
+      if (!nameEl.value.trim()) {
+        nameEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+      }
+
+      // Update drop zone UI
+      document.getElementById('drop-zone-main').innerHTML =
+        `<span style="color:#00D4AA; font-weight:700;">✔ File Ready:</span> ${file.name}`;
+      document.getElementById('drop-zone-sub').textContent =
+        `${sizeMB} MB · ${file.type} · Click to change file`;
+
+      // Clear URL field since a local file takes priority
+      document.getElementById('clip-url').value = 'idb://pending';
+      document.getElementById('clip-manual-url').value = '';
+
+      // Live preview in simulator immediately
+      const titleEl = document.getElementById('clip-title');
+      const durEl = document.getElementById('clip-duration');
+      previewClipInSimulator({
+        id: '_preview',
+        title: titleEl.value || file.name,
+        videoUrl: blobUrl,
+        duration: (durEl.value || '?') + 's',
+        aspectRatio: document.getElementById('clip-aspect').value,
+        volume: document.getElementById('clip-audio').value
+      });
+
+      appendLog(`[UPLOAD] Local file selected: "${file.name}" (${sizeMB} MB). Ready to publish.`);
     }
 
     function handleUrlInput() {
       const url = document.getElementById('clip-manual-url').value.trim();
       document.getElementById('clip-url').value = url;
+      pendingLocalFile = null; // URL takes over — discard pending local file
       if (url) {
-        document.getElementById('drop-zone-main').textContent = "Select Movie Clip File or Drag & Drop Here";
-        document.getElementById('drop-zone-sub').textContent = "Supports MP4, WebM (Max 50MB)";
+        document.getElementById('drop-zone-main').textContent = 'Click to Browse Local Video File';
+        document.getElementById('drop-zone-sub').textContent = 'Drag & Drop supported · MP4, WebM · Any size';
       }
     }
 
-    function addClip() {
+    async function addClip() {
       const title = document.getElementById('clip-title').value.trim();
       const durationNum = parseInt(document.getElementById('clip-duration').value) || 20;
-      const videoUrl = document.getElementById('clip-url').value.trim() || document.getElementById('clip-manual-url').value.trim();
+      const manualUrl = document.getElementById('clip-manual-url').value.trim();
       const fit = document.getElementById('clip-aspect').value;
       const vol = document.getElementById('clip-audio').value;
       const preload = document.getElementById('clip-preload').value;
 
-      if (!title || !videoUrl) {
-        alert("IT Validation Error: Please provide a Campaign Name and select a Video clip source.");
+      if (!title) {
+        showToast('Please enter a Campaign Name / Movie Label.');
+        return;
+      }
+      if (!pendingLocalFile && !manualUrl) {
+        showToast('Please select a local video file or paste a remote URL.');
         return;
       }
 
-      const sizeMock = (Math.random() * 20 + 15).toFixed(1) + " MB";
+      const id = 'v_' + Date.now();
+      let videoUrl, sizeLabel;
+
+      if (pendingLocalFile) {
+        // Save blob to IndexedDB under the new clip ID
+        try {
+          await VideoDB.save(id, pendingLocalFile.file);
+          videoUrl = 'idb://' + id;
+          sizeLabel = pendingLocalFile.sizeLabel;
+          appendLog(`[IDB] Video blob saved to IndexedDB (ID: ${id}, Size: ${sizeLabel}).`);
+        } catch(e) {
+          showToast('IndexedDB save failed. Ensure browser storage is not blocked.');
+          console.error(e);
+          return;
+        }
+      } else {
+        videoUrl = manualUrl;
+        sizeLabel = '—';
+      }
 
       const newClip = {
-        id: 'v_' + Date.now(),
-        title: title,
-        videoUrl: videoUrl,
+        id,
+        title,
+        videoUrl,
         duration: durationNum + 's',
         status: 'active',
         aspectRatio: fit,
         volume: vol,
-        preload: preload,
-        fileSize: sizeMock,
+        preload,
+        fileSize: sizeLabel,
         syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
       };
 
@@ -1061,26 +1161,31 @@
       renderQueue();
       updateTelemetry();
 
-      // Reset Form
+      // Reset form
+      pendingLocalFile = null;
       document.getElementById('clip-title').value = '';
       document.getElementById('clip-duration').value = '';
       document.getElementById('clip-url').value = '';
       document.getElementById('clip-manual-url').value = '';
-      document.getElementById('drop-zone-main').textContent = "Select Movie Clip File or Drag & Drop Here";
-      document.getElementById('drop-zone-sub').textContent = "Supports MP4, WebM (Max 50MB)";
-      
-      // Reset radio select states
+      document.getElementById('local-file-input').value = '';
+      document.getElementById('drop-zone-main').innerHTML = 'Click to Browse Local Video File';
+      document.getElementById('drop-zone-sub').textContent = 'Drag & Drop supported · MP4, WebM · Any size';
       setFitOption('cover');
       setAudioOption('muted');
       document.getElementById('clip-preload').value = 'eager';
 
-      showToast("Campaign video published & broadcasted successfully!");
-      appendLog(`[SYNC] Broadcasting new playlist layout. Clip "${title}" added (Cache size: ${sizeMock}, Preload: ${preload}).`);
+      showToast('Campaign published & deployed to terminals!');
+      appendLog(`[SYNC] Clip "${title}" added (${sizeLabel}, Preload: ${preload}). Broadcasting to kiosk nodes.`);
     }
 
-    function deleteClip(id) {
+    async function deleteClip(id) {
       const ad = ads.find(a => a.id === id);
       const title = ad ? ad.title : 'Unknown';
+
+      // Remove blob from IndexedDB if it was a local file
+      if (ad && ad.videoUrl && ad.videoUrl.startsWith('idb://')) {
+        try { await VideoDB.remove(id); } catch(e) { console.warn('IDB delete failed', e); }
+      }
 
       ads = ads.filter(a => a.id !== id);
       localStorage.setItem('cira_ads_v2', JSON.stringify(ads));
