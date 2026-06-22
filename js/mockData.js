@@ -234,44 +234,7 @@ const MOCK_DATA = {
     } catch(e) {
       console.warn("Failed to load stored ads", e);
     }
-    return [
-      { 
-        id: "v001", 
-        title: "Eclipse Protocol Trailer", 
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", 
-        duration: "15s", 
-        status: "active",
-        aspectRatio: "cover",
-        volume: "muted",
-        preload: "eager",
-        fileSize: "18.4 MB",
-        syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
-      },
-      { 
-        id: "v002", 
-        title: "Kaal Warrior Teaser", 
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", 
-        duration: "20s", 
-        status: "active",
-        aspectRatio: "contain",
-        volume: "muted",
-        preload: "eager",
-        fileSize: "24.1 MB",
-        syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
-      },
-      { 
-        id: "v003", 
-        title: "Star Nomad Teaser", 
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", 
-        duration: "25s", 
-        status: "active",
-        aspectRatio: "cover",
-        volume: "muted",
-        preload: "lazy",
-        fileSize: "32.8 MB",
-        syncedTerminals: ["Lobby-01", "Concession-01"]
-      }
-    ];
+    return [];
   })()
 };
 

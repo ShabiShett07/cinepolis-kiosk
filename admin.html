@@ -794,49 +794,26 @@
     }
 
     function loadClips() {
+      // Clear any old cached sample videos that may be stored from previous sessions
       const stored = localStorage.getItem('cira_ads');
       if (stored) {
-        ads = JSON.parse(stored);
-      } else {
-        ads = [
-          { 
-            id: "v001", 
-            title: "Eclipse Protocol Trailer", 
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", 
-            duration: "15s", 
-            status: "active",
-            aspectRatio: "cover",
-            volume: "muted",
-            preload: "eager",
-            fileSize: "18.4 MB",
-            syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
-          },
-          { 
-            id: "v002", 
-            title: "Kaal Warrior Teaser", 
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", 
-            duration: "20s", 
-            status: "active",
-            aspectRatio: "contain",
-            volume: "muted",
-            preload: "eager",
-            fileSize: "24.1 MB",
-            syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
-          },
-          { 
-            id: "v003", 
-            title: "Star Nomad Teaser", 
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", 
-            duration: "25s", 
-            status: "active",
-            aspectRatio: "cover",
-            volume: "muted",
-            preload: "lazy",
-            fileSize: "32.8 MB",
-            syncedTerminals: ["Lobby-01", "Concession-01"]
+        try {
+          const parsed = JSON.parse(stored);
+          // Wipe if it still contains the old Google Storage sample URLs
+          const hasSamples = parsed.some(a =>
+            a.videoUrl && a.videoUrl.includes('commondatastorage.googleapis.com')
+          );
+          if (hasSamples) {
+            localStorage.removeItem('cira_ads');
+            ads = [];
+          } else {
+            ads = parsed;
           }
-        ];
-        localStorage.setItem('cira_ads', JSON.stringify(ads));
+        } catch(e) {
+          ads = [];
+        }
+      } else {
+        ads = [];
       }
       renderQueue();
       updateTelemetry();
@@ -1031,33 +1008,15 @@
     }
 
     function simulateUpload() {
-      const samples = [
-        { title: "Kaal Warrior Teaser", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", duration: 20, size: "24.1 MB" },
-        { title: "Star Nomad Official Trailer", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", duration: 30, size: "32.8 MB" },
-        { title: "Eclipse Protocol Trailer", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", duration: 15, size: "18.4 MB" }
-      ];
-
-      const chosen = samples[Math.floor(Math.random() * samples.length)];
-      
-      document.getElementById('clip-title').value = chosen.title;
-      document.getElementById('clip-duration').value = chosen.duration;
-      document.getElementById('clip-url').value = chosen.url;
-      document.getElementById('clip-manual-url').value = "";
-      
-      document.getElementById('drop-zone-main').innerHTML = `✔️ <span style="color:#00D4AA; font-weight:700;">File Attached:</span> ${chosen.title.toLowerCase().replace(/\s+/g, '_')}.mp4`;
-      document.getElementById('drop-zone-sub').textContent = `Volume Size: ${chosen.size} // Ready to Publish`;
-
-      showToast("Mock video uploaded successfully");
-      appendLog(`[UPLOAD] Mock file attached: "${chosen.title}" (${chosen.size})`);
-      
-      // Auto preview on upload
-      previewClipInSimulator({
-        title: chosen.title,
-        videoUrl: chosen.url,
-        duration: chosen.duration + 's',
-        aspectRatio: document.getElementById('clip-aspect').value,
-        volume: document.getElementById('clip-audio').value
-      });
+      // No auto-populate samples — highlight the URL field for manual entry
+      const urlInput = document.getElementById('clip-manual-url');
+      document.getElementById('drop-zone-main').textContent = 'Paste a direct video URL in the field below';
+      document.getElementById('drop-zone-sub').textContent = 'Supports any publicly accessible MP4 or WebM link';
+      if (urlInput) {
+        urlInput.focus();
+        urlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      appendLog('[UPLOAD] Drop zone clicked. Awaiting manual URL input from operator.');
     }
 
     function handleUrlInput() {
