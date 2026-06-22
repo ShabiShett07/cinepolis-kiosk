@@ -17,6 +17,7 @@ class CinemaKiosk {
       currentSeats: []
     };
     this.adInterval = null;
+    this.adTimeout = null;
     this.currentAdIndex = 0;
     this.inactivityTimer = null;
     this.paymentSimulationTimers = [];
@@ -45,41 +46,120 @@ class CinemaKiosk {
 
   // ===================== AD ROTATION =====================
   startIdleAds() {
-    const ads = MOCK_DATA.adCreatives;
+    let ads = [];
+    try {
+      const stored = localStorage.getItem('cira_ads');
+      if (stored) {
+        ads = JSON.parse(stored);
+      }
+    } catch(e) {
+      console.warn("Failed to load stored ads", e);
+    }
+    
+    if (!ads || ads.length === 0) {
+      ads = MOCK_DATA.adCreatives;
+    }
+
+    ads = ads.filter(ad => ad.status === 'active');
     const container = document.getElementById('idle-ad-track');
     if (!container) return;
 
     container.style.opacity = '1';
 
-    container.innerHTML = ads.map((ad, i) => `
-      <div class="idle-ad-slide ${i === 0 ? 'active' : ''}" id="ad-slide-${i}">
-        <div style="position:absolute;inset:0;background:linear-gradient(135deg, #ffffff 0%, #f4f5f8 60%, ${ad.color}15 100%);"></div>
-        <div class="idle-overlay">
-          <div class="idle-tap-prompt">
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(32px,5vw,72px);font-weight:900;text-align:center;color:var(--text-primary);margin-bottom:8px;">${ad.title}</div>
-            <div style="font-size:clamp(16px,2vw,24px);color:var(--text-secondary);text-align:center;margin-bottom:40px;">${ad.subtitle}</div>
-            <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
-              <div class="idle-tap-inner">👆</div>
+    if (ads.length === 0) {
+      container.innerHTML = `
+        <div class="idle-ad-slide active">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg, #1e0a3c 0%, #0a0515 100%);"></div>
+          <div class="idle-overlay">
+            <div class="idle-tap-prompt">
+              <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
+                <div class="idle-tap-inner">👆</div>
+              </div>
+              <div class="idle-tap-text">Tap to Start</div>
+              <div class="idle-tap-sub">Touch anywhere to begin booking</div>
             </div>
-            <div class="idle-tap-text" style="color:var(--text-primary);text-shadow:none;">Tap to Start</div>
-            <div class="idle-tap-sub" style="color:var(--text-secondary);">Touch anywhere to begin booking</div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+      return;
+    }
 
-    this.adInterval = setInterval(() => {
-      const slides = container.querySelectorAll('.idle-ad-slide');
-      slides[this.currentAdIndex].classList.remove('active');
-      this.currentAdIndex = (this.currentAdIndex + 1) % ads.length;
-      slides[this.currentAdIndex].classList.add('active');
-    }, 5000);
+    this.currentAdIndex = 0;
+
+    const playVideo = (index) => {
+      if (this.adTimeout) clearTimeout(this.adTimeout);
+      const ad = ads[index];
+      const fit = ad.aspectRatio || 'cover';
+      
+      container.innerHTML = `
+        <div class="idle-ad-slide active" style="width:100%;height:100%;position:relative;background:#000;overflow:hidden;">
+          <video id="idle-ad-video" autoplay playsinline style="width:100%;height:100%;object-fit:${fit};opacity:0.65;position:absolute;inset:0;">
+            <source src="${ad.videoUrl}" type="video/mp4">
+          </video>
+          <div class="idle-overlay" style="z-index:2;position:relative;">
+            <div class="idle-tap-prompt">
+              <div style="font-family:'Outfit',sans-serif;font-size:clamp(24px,4vw,48px);font-weight:900;text-align:center;color:var(--text-primary);margin-bottom:8px;text-shadow:0 4px 15px rgba(0,0,0,0.6);">${ad.title}</div>
+              <div style="font-size:clamp(12px,1.5vw,16px);color:var(--text-secondary);text-align:center;margin-bottom:40px;text-shadow:0 2px 8px rgba(0,0,0,0.6);">${ad.duration} Loop Clip</div>
+              <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
+                <div class="idle-tap-inner">👆</div>
+              </div>
+              <div class="idle-tap-text" style="color:var(--text-primary);text-shadow:0 2px 10px rgba(0,0,0,0.8);">Tap to Start</div>
+              <div class="idle-tap-sub" style="color:var(--text-secondary);text-shadow:0 2px 8px rgba(0,0,0,0.6);">Touch anywhere to begin booking</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const video = document.getElementById('idle-ad-video');
+      if (video) {
+        // Apply volume settings
+        const vol = ad.volume || 'muted';
+        if (vol === 'muted') {
+          video.muted = true;
+          video.volume = 0;
+        } else {
+          video.muted = false;
+          if (vol === 'low') video.volume = 0.15;
+          else if (vol === 'medium') video.volume = 0.40;
+          else if (vol === 'high') video.volume = 0.80;
+        }
+
+        video.onended = () => {
+          this.currentAdIndex = (this.currentAdIndex + 1) % ads.length;
+          playVideo(this.currentAdIndex);
+        };
+
+        // Safety fallback timer matching the clip duration
+        const durationSec = parseInt(ad.duration) || 25;
+        this.adTimeout = setTimeout(() => {
+          this.currentAdIndex = (this.currentAdIndex + 1) % ads.length;
+          playVideo(this.currentAdIndex);
+        }, durationSec * 1000 + 2000); // 2s buffer for load delays
+
+        // Autoplay safety trigger
+        video.play().catch(e => {
+          console.warn("Autoplay audio blocked, falling back to muted autoplay", e);
+          video.muted = true;
+          video.play().catch(err => console.error("Unrecoverable video playback error", err));
+        });
+      }
+    };
+
+    playVideo(this.currentAdIndex);
   }
 
   stopIdleAds() {
-    if (this.adInterval) {
-      clearInterval(this.adInterval);
-      this.adInterval = null;
+    if (this.adTimeout) {
+      clearTimeout(this.adTimeout);
+      this.adTimeout = null;
+    }
+    const video = document.getElementById('idle-ad-video');
+    if (video) {
+      try {
+        video.pause();
+        video.src = "";
+        video.load();
+      } catch(e) {}
     }
   }
 

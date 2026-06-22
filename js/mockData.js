@@ -235,10 +235,42 @@ const MOCK_DATA = {
       console.warn("Failed to load stored ads", e);
     }
     return [
-      { id: "ad001", title: "Book Early, Save More!", subtitle: "Up to 20% off on advance bookings", color: "#F5A623", accent: "#1E0A3C" },
-      { id: "ad002", title: "IMAX Experience", subtitle: "Feel every frame like never before", color: "#00D4AA", accent: "#0D0D1A" },
-      { id: "ad003", title: "Weekend Couple Pass", subtitle: "2 tickets + combo @ ₹999 only", color: "#E91E8C", accent: "#1A0A2E" },
-      { id: "ad004", title: "Cinepolis Star Club", subtitle: "Join & earn points on every booking", color: "#7C3AED", accent: "#0D0D1A" }
+      { 
+        id: "v001", 
+        title: "Cinema Popcorn Loop", 
+        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-popcorn-in-a-red-and-white-striped-bucket-43187-large.mp4", 
+        duration: "15s", 
+        status: "active",
+        aspectRatio: "cover",
+        volume: "muted",
+        preload: "eager",
+        fileSize: "18.4 MB",
+        syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
+      },
+      { 
+        id: "v002", 
+        title: "Vintage Projector Loop", 
+        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-film-projector-in-a-dark-room-43188-large.mp4", 
+        duration: "20s", 
+        status: "active",
+        aspectRatio: "contain",
+        volume: "muted",
+        preload: "eager",
+        fileSize: "24.1 MB",
+        syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
+      },
+      { 
+        id: "v003", 
+        title: "Empty Cinema Hall Loop", 
+        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-movie-theater-with-empty-seats-43189-large.mp4", 
+        duration: "25s", 
+        status: "active",
+        aspectRatio: "cover",
+        volume: "muted",
+        preload: "lazy",
+        fileSize: "32.8 MB",
+        syncedTerminals: ["Lobby-01", "Concession-01"]
+      }
     ];
   })()
 };

@@ -4,229 +4,595 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cinepolis Admin Console — Ad Management</title>
-  <meta name="description" content="Manage advertising campaigns and creatives for the self-service kiosk.">
-  <link rel="stylesheet" href="css/design-system.css?v=1.2">
-  <link rel="stylesheet" href="css/kiosk.css?v=1.2">
+  <title>Cinepolis Kiosk IT Management Console — Attract Loop Controller</title>
+  <link rel="stylesheet" href="css/design-system.css?v=1.4">
   <style>
-    body {
-      background: linear-gradient(135deg, var(--bg-dark), var(--bg-deep));
-      min-height: 100vh;
-      color: var(--text-primary);
-      font-family: 'Outfit', sans-serif;
-      padding: 40px 16px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      box-sizing: border-box;
-      overflow-y: auto;
+    :root {
+      --primary: #1E0A3C;       /* Cinepolis Deep Indigo */
+      --primary-light: #2D1060;
+      --accent: #F5A623;        /* Cinepolis Gold */
+      --bg-surface: #F8F9FC;
+      --panel-bg: #FFFFFF;
+      --border-color: rgba(30, 10, 60, 0.08);
+      --text-main: #1E0A3C;
+      --text-muted: #5E6475;
+      --success: #00D4AA;
+      --shadow-sm: 0 2px 8px rgba(30, 10, 60, 0.04);
+      --shadow-md: 0 8px 24px rgba(30, 10, 60, 0.06);
     }
 
-    .admin-container {
-      width: 100%;
-      max-width: 850px;
+    body {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 28px;
     }
 
-    .admin-header {
+    /* HEADER */
+    .console-header {
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
     }
 
-    .logo-container {
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .logo-star {
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
       color: var(--accent);
-      font-size: 26px;
-      animation: spin 10s linear infinite;
+      box-shadow: 0 2px 10px rgba(30, 10, 60, 0.15);
     }
 
-    .logo-text {
-      font-size: 24px;
-      font-weight: 900;
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title span {
+      color: var(--accent);
+    }
+
+    .console-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border-color);
+      padding-left: 12px;
+      margin-left: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .logo-text span {
-      color: var(--accent);
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
 
-    .admin-grid {
+    /* BUTTONS */
+    .btn-console {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--panel-bg);
+      color: var(--text-main);
+    }
+
+    .btn-console:hover {
+      background: var(--bg-surface);
+      border-color: var(--primary);
+    }
+
+    .btn-console.primary {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .btn-console.primary:hover {
+      background: var(--primary-light);
+      box-shadow: 0 4px 12px rgba(30, 10, 60, 0.15);
+    }
+
+    /* TELEMETRY METRICS */
+    .metrics-row {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 28px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px 32px 0 32px;
     }
 
-    @media (min-width: 768px) {
-      .admin-grid {
-        grid-template-columns: 1fr 1.1fr;
-      }
-    }
-
-    .form-group {
+    .metric-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
+    }
+
+    .metric-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* CONSOLE GRID */
+    .console-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      padding: 24px 32px;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--primary);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
       margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* FORM GROUPS */
+    .form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .form-group label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
-      color: var(--text-secondary);
+      color: var(--primary);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.3px;
     }
 
     .form-input {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1.5px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      color: var(--text-primary);
-      font-family: 'Outfit', sans-serif;
-      font-size: 14px;
-      transition: all 0.3s;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      outline: none;
+      color: var(--text-main);
+      transition: all 0.2s;
     }
 
     .form-input:focus {
-      outline: none;
       border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 10px rgba(245, 166, 35, 0.15);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.12);
     }
 
-    /* Live Preview & Card Design matching the Attract screen */
-    .ad-preview-box {
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      min-height: 180px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    .form-select {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      outline: none;
+      background: #FFFFFF;
+      color: var(--text-main);
+    }
+
+    /* OPTION CHOOSER (GRID CARDS) */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .options-grid.quad {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .option-card {
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      border-radius: 6px;
+      padding: 8px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-deep);
-      border: 1.5px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.4s ease;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
     }
 
-    .ad-preview-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-      line-height: 1.2;
+    .option-card:hover {
+      border-color: var(--accent);
+      background: rgba(245, 166, 35, 0.03);
     }
 
-    .ad-preview-sub {
-      font-size: 14px;
-      opacity: 0.85;
-      font-weight: 500;
+    .option-card.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #FFFFFF;
     }
 
-    /* Preset color swatches */
-    .color-swatches {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    .option-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .option-desc {
+      font-size: 9px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      background: var(--bg-surface);
+      border-radius: 6px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--accent);
+      background: rgba(245, 166, 35, 0.03);
+      color: var(--text-main);
+    }
+
+    .drop-zone-text {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .drop-zone-sub {
+      font-size: 10px;
+      opacity: 0.7;
       margin-top: 4px;
     }
 
-    .swatch {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid rgba(255,255,255,0.2);
-      transition: all 0.2s;
+    /* 9:16 KIOSK SIMULATOR */
+    .simulator-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
     }
 
-    .swatch:hover, .swatch.selected {
-      transform: scale(1.15);
-      border-color: #fff;
-      box-shadow: 0 0 10px rgba(255,255,255,0.4);
-    }
-
-    .ad-list-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .ad-list-card {
+    .kiosk-bezel {
+      width: 250px;
+      aspect-ratio: 9 / 16;
+      background: #000000;
+      border: 12px solid #2D2D2D;
+      border-radius: 24px;
+      box-shadow: var(--shadow-md), 0 20px 40px rgba(30, 10, 60, 0.15);
       position: relative;
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kiosk-camera {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #111111;
+      z-index: 10;
+    }
+
+    .kiosk-speaker {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 2px;
+      background: #1A1A1A;
+      z-index: 10;
+      border-radius: 1px;
+    }
+
+    .kiosk-screen {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #101018;
+      overflow: hidden;
+    }
+
+    .kiosk-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.8;
+    }
+
+    .kiosk-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      color: #7E8494;
+      font-size: 11px;
+      background: radial-gradient(circle at center, #1E0A3C 0%, #080310 100%);
+    }
+
+    .kiosk-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 24px;
+      background: linear-gradient(to top, rgba(30, 10, 60, 0.9) 0%, rgba(30, 10, 60, 0) 60%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .kiosk-overlay-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: #FFFFFF;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    .kiosk-overlay-sub {
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 12px;
+    }
+
+    .kiosk-overlay-prompt {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(245, 166, 35, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(245, 166, 35, 0.1);
+    }
+
+    .kiosk-overlay-finger {
+      font-size: 10px;
+    }
+
+    /* QUEUE SECTION */
+    .queue-panel {
+      margin: 0 32px 24px 32px;
+    }
+
+    .console-table-wrap {
+      overflow-x: auto;
+    }
+
+    .console-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .console-table th {
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .console-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .console-table tr:hover td {
+      background: var(--bg-surface);
+    }
+
+    /* TOGGLE SWITCH */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #E2E8F0;
+      transition: .3s;
+      border-radius: 10px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge.active {
+      background: rgba(0, 212, 170, 0.1);
+      color: #00D4AA;
+      border: 1px solid rgba(0, 212, 170, 0.2);
+    }
+
+    .badge.paused {
+      background: rgba(94, 100, 117, 0.1);
+      color: var(--text-muted);
+      border: 1px solid rgba(94, 100, 117, 0.2);
+    }
+
+    .badge.eager {
+      background: rgba(30, 10, 60, 0.05);
+      color: var(--primary);
+    }
+
+    .badge.lazy {
+      background: rgba(245, 166, 35, 0.1);
+      color: #D4891A;
+    }
+
+    /* LOGS PANEL */
+    .logs-panel {
+      margin: 0 32px 32px 32px;
+      background: #0D0D14;
+      border: 1px solid #1F1F2E;
+      border-radius: 8px;
+      padding: 16px;
+      color: #00E676;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .logs-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      color: #94A3B8;
+      border-bottom: 1px solid #1F1F2E;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      font-weight: 700;
     }
 
-    .ad-card-info {
-      text-align: left;
+    .logs-body {
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scrollbar-width: thin;
     }
 
-    .ad-card-title {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 16px;
-      margin-bottom: 4px;
+    .logs-body::-webkit-scrollbar {
+      width: 4px;
     }
 
-    .ad-card-sub {
-      font-size: 12px;
-      opacity: 0.75;
+    .logs-body::-webkit-scrollbar-thumb {
+      background: #1F1F2E;
     }
 
-    .delete-btn {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #EF4444;
-      border-radius: var(--radius-sm);
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: 'Outfit', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-
-    .delete-btn:hover {
-      background: #EF4444;
-      color: white;
-    }
-
+    /* TOAST */
     .toast {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(0, 212, 170, 0.9);
-      border: 1px solid var(--success);
-      color: #fff;
+      background: var(--primary);
+      border: 1px solid var(--accent);
+      color: #FFFFFF;
       padding: 12px 24px;
-      border-radius: var(--radius-md);
+      border-radius: 6px;
       font-family: 'Outfit', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      box-shadow: var(--shadow-deep);
+      box-shadow: var(--shadow-md);
       opacity: 0;
       transform: translateY(20px);
-      transition: all 0.4s ease;
+      transition: all 0.3s ease;
       z-index: 1000;
     }
 
@@ -238,210 +604,554 @@
 </head>
 
 <body>
-  <div class="admin-container">
-    
-    <!-- HEADER -->
-    <header class="admin-header">
-      <div class="logo-container">
-        <div class="logo-star">✦</div>
-        <div class="logo-text">Cine<span>polis</span></div>
-      </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <button class="btn btn-ghost btn-sm" onclick="resetToDefaults()">🔄 Reset Defaults</button>
-        <a href="index.html" target="_blank" class="btn btn-primary btn-sm">👁️ Preview Kiosk</a>
-      </div>
-    </header>
-
-    <div>
-      <h1 class="screen-title" style="font-size: 28px; margin-bottom: 6px;">Kiosk Ad Management</h1>
-      <p class="screen-subtitle" style="font-size: 13px;">Upload, customize, and arrange campaign banner creatives running on the self-service attract loops.</p>
+  <!-- CONSOLE HEADER -->
+  <header class="console-header">
+    <div class="brand-group">
+      <div class="brand-logo">C</div>
+      <div class="brand-title">Ciné<span>polis</span></div>
+      <div class="console-subtitle">IT Operations Console // Video Loop Manager</div>
     </div>
+    <div class="header-actions">
+      <button class="btn-console" onclick="resetToDefaults()">Reset Defaults</button>
+      <a href="index.html" target="_blank" class="btn-console primary">View Live Kiosk</a>
+    </div>
+  </header>
 
-    <!-- MAIN INTERFACE GRID -->
-    <div class="admin-grid">
-      
-      <!-- FORM COLUMN -->
-      <section class="glass" style="border-radius: var(--radius-xl); padding: 24px;">
-        <h2 style="font-family:'Outfit',sans-serif; font-size:18px; font-weight:800; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">➕ Create Banner</h2>
-        
-        <div class="form-group">
-          <label for="ad-title">Headline Text</label>
-          <input type="text" id="ad-title" class="form-input" placeholder="e.g. IMAX Experience" oninput="updatePreview()" value="Flat 20% Off on Food!">
-        </div>
+  <!-- TELEMETRY METRICS ROW -->
+  <section class="metrics-row">
+    <div class="metric-card">
+      <span class="metric-value" id="metric-terminals">3 Online</span>
+      <span class="metric-label">Kiosk Status</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-value" id="metric-clips">3 Active</span>
+      <span class="metric-label">Running Campaigns</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-value" id="metric-cache">75.3 MB</span>
+      <span class="metric-label">Total Cache Footprint</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-value" id="metric-duration">60 Secs</span>
+      <span class="metric-label">Playlist Duration</span>
+    </div>
+  </section>
 
-        <div class="form-group">
-          <label for="ad-sub">Subtext / Details</label>
-          <input type="text" id="ad-sub" class="form-input" placeholder="e.g. Feel every frame like never before" oninput="updatePreview()" value="Use code CRISPY🍿 on checkout">
-        </div>
+  <!-- MAIN CONSOLE GRID -->
+  <main class="console-layout">
+    <!-- LEFT PANEL: REGISTER CLIP -->
+    <section class="panel">
+      <div class="panel-title">Add Movie Clip / Video Campaign</div>
 
-        <div class="form-group">
-          <label>Theme Style Presets</label>
-          <div class="color-swatches" id="theme-presets">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-
-        <button class="btn btn-primary btn-xl" style="width:100%; margin-top:12px;" onclick="addAd()">✨ Add & Publish Creative</button>
-      </section>
-
-      <!-- PREVIEW & LIST COLUMN -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        
-        <!-- Live Preview -->
-        <div>
-          <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Live Creative Preview</div>
-          <div class="ad-preview-box" id="ad-preview">
-            <div class="ad-preview-title" id="preview-title">Headline</div>
-            <div class="ad-preview-sub" id="preview-sub">Subtitle details go here</div>
-          </div>
-        </div>
-
-        <!-- Active Ads List -->
-        <div>
-          <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Active Ad Queue</div>
-          <div class="ad-list-grid" id="ad-list">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-
+      <div class="form-group">
+        <label for="clip-title">Campaign Name / Movie Label</label>
+        <input type="text" id="clip-title" class="form-input" placeholder="e.g. Star Nomad - IMAX Trailer">
       </div>
 
-    </div>
+      <div class="form-row" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px;">
+        <div class="form-group">
+          <label for="clip-duration">Play Duration (Seconds)</label>
+          <input type="number" id="clip-duration" class="form-input" placeholder="e.g. 20" min="5" max="180">
+        </div>
+        <div class="form-group">
+          <label for="clip-preload">Preload Cache Priority</label>
+          <select id="clip-preload" class="form-select">
+            <option value="eager">Eager (Pre-download immediately)</option>
+            <option value="lazy">Lazy (Download on demand)</option>
+          </select>
+        </div>
+      </div>
 
-  </div>
+      <div class="form-group" style="margin-top: 8px;">
+        <label>Video Aspect Ratio (Kiosk Fitting Mode)</label>
+        <div class="options-grid" id="fit-options">
+          <div class="option-card active" onclick="setFitOption('cover')" id="fit-cover">
+            <div class="option-title">Crop to Fill</div>
+            <div class="option-desc">Fills vertical screen (9:16)</div>
+          </div>
+          <div class="option-card" onclick="setFitOption('contain')" id="fit-contain">
+            <div class="option-title">Letterbox</div>
+            <div class="option-desc">Shows entire movie width</div>
+          </div>
+          <div class="option-card" onclick="setFitOption('fill')" id="fit-fill">
+            <div class="option-title">Stretch</div>
+            <div class="option-desc">Stretches to bounds</div>
+          </div>
+        </div>
+        <input type="hidden" id="clip-aspect" value="cover">
+      </div>
+
+      <div class="form-group" style="margin-top: 8px;">
+        <label>Kiosk Audio Configuration</label>
+        <div class="options-grid quad" id="audio-options">
+          <div class="option-card active" onclick="setAudioOption('muted')" id="audio-muted">
+            <div class="option-title">Muted</div>
+            <div class="option-desc">No Sound</div>
+          </div>
+          <div class="option-card" onclick="setAudioOption('low')" id="audio-low">
+            <div class="option-title">Low</div>
+            <div class="option-desc">15% Vol</div>
+          </div>
+          <div class="option-card" onclick="setAudioOption('medium')" id="audio-medium">
+            <div class="option-title">Medium</div>
+            <div class="option-desc">40% Vol</div>
+          </div>
+          <div class="option-card" onclick="setAudioOption('high')" id="audio-high">
+            <div class="option-title">High</div>
+            <div class="option-desc">80% Vol</div>
+          </div>
+        </div>
+        <input type="hidden" id="clip-audio" value="muted">
+      </div>
+
+      <div class="form-group" style="margin-top: 8px;">
+        <label>Video File Source</label>
+        <div class="drop-zone" onclick="simulateUpload()">
+          <div class="drop-zone-text" id="drop-zone-main">Select Movie Clip File or Drag & Drop Here</div>
+          <div class="drop-zone-sub" id="drop-zone-sub">Supports MP4, WebM (Max 50MB)</div>
+        </div>
+        <input type="hidden" id="clip-url">
+      </div>
+
+      <div class="form-group">
+        <label for="clip-manual-url">Or Paste Source URL</label>
+        <input type="text" id="clip-manual-url" class="form-input" placeholder="https://domain.com/trailer.mp4" oninput="handleUrlInput()">
+      </div>
+
+      <button class="btn-console primary" style="width:100%; justify-content:center; padding:12px; margin-top:12px;" onclick="addClip()">Publish Clip & Deploy to Terminals</button>
+    </section>
+
+    <!-- RIGHT PANEL: KIOSK PORTRAIT MONITOR -->
+    <section class="panel" style="justify-content: space-between;">
+      <div class="panel-title">Vertical Kiosk Playback Simulator</div>
+      <div class="simulator-container">
+        <div class="kiosk-bezel">
+          <div class="kiosk-camera"></div>
+          <div class="kiosk-speaker"></div>
+          <div class="kiosk-screen">
+            <div class="kiosk-placeholder" id="kiosk-placeholder">
+              <span>NO ACTIVE PLAYBACK</span>
+              <span style="opacity: 0.6; font-size: 9px; margin-top: 4px;">Click ▶ Play on a campaign below to preview it on the portrait screen simulator</span>
+            </div>
+            <video id="kiosk-video" class="kiosk-video" autoplay muted loop playsinline style="display:none;"></video>
+            <div class="kiosk-overlay" id="kiosk-overlay" style="display:none;">
+              <div class="kiosk-overlay-title" id="overlay-title">Cinepolis Cinema</div>
+              <div class="kiosk-overlay-sub" id="overlay-duration">15s Loop</div>
+              <div class="kiosk-overlay-prompt">
+                <div class="kiosk-overlay-finger">👆</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border-color); padding-top:16px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted);">
+        <span>Kiosk Network Sync: <strong style="color:#00D4AA;">STABLE (HTTPS)</strong></span>
+        <span>Telemetry Link Active</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- CAMPAIGN QUEUE TABLE -->
+  <section class="panel queue-panel">
+    <div class="panel-title">Active Campaign Playlist Queue</div>
+    <div class="console-table-wrap">
+      <table class="console-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Movie / Campaign Label</th>
+            <th>Display Fit</th>
+            <th>Audio Mode</th>
+            <th>Priority</th>
+            <th>Play Duration</th>
+            <th>Cache Footprint</th>
+            <th>Terminal Deployment</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="queue-body">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LIVE EVENT AUDIT LOGS -->
+  <section class="logs-panel">
+    <div class="logs-header">
+      <span>KIOSK SYSTEM TELEMETRY EVENT STREAM</span>
+      <span id="log-status">ONLINE // STREAMING</span>
+    </div>
+    <div class="logs-body" id="logs-body">
+      <!-- Populated by JS logs simulation -->
+    </div>
+  </section>
 
   <!-- TOAST NOTIFICATION -->
-  <div class="toast" id="toast">Creative changes saved & published!</div>
+  <div class="toast" id="toast">Console updated successfully.</div>
 
   <script>
-    const PRESETS = [
-      { name: 'Amber Glow', color: '#F5A623', accent: '#1E0A3C' },
-      { name: 'IMAX Teal', color: '#00D4AA', accent: '#0D0D1A' },
-      { name: 'Romance Pink', color: '#E91E8C', accent: '#1A0A2E' },
-      { name: 'Violet Star', color: '#7C3AED', accent: '#0D0D1A' },
-      { name: 'Crimson Red', color: '#EF4444', accent: '#2A0808' }
-    ];
-
-    let selectedPreset = PRESETS[0];
     let ads = [];
+    const fitOptions = ['cover', 'contain', 'fill'];
+    const audioOptions = ['muted', 'low', 'medium', 'high'];
 
-    // Initialize Page
     function init() {
-      // Load Presets Pickers
-      const presetContainer = document.getElementById('theme-presets');
-      presetContainer.innerHTML = PRESETS.map((p, idx) => `
-        <div class="swatch ${idx === 0 ? 'selected' : ''}" 
-             style="background: ${p.color}; border-color: ${p.accent};" 
-             onclick="selectPreset(${idx}, this)" 
-             title="${p.name}">
-        </div>
-      `).join('');
-
-      loadAds();
-      updatePreview();
+      loadClips();
+      startLogsSimulation();
     }
 
-    function selectPreset(idx, el) {
-      document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedPreset = PRESETS[idx];
-      updatePreview();
-    }
-
-    function updatePreview() {
-      const title = document.getElementById('ad-title').value || 'Headline';
-      const sub = document.getElementById('ad-sub').value || 'Subtitle details go here';
-
-      const previewBox = document.getElementById('ad-preview');
-      const previewTitle = document.getElementById('preview-title');
-      const previewSub = document.getElementById('preview-sub');
-
-      previewBox.style.backgroundColor = selectedPreset.accent;
-      previewBox.style.color = selectedPreset.color;
-      previewBox.style.borderColor = selectedPreset.color;
-
-      previewTitle.textContent = title;
-      previewSub.textContent = sub;
-    }
-
-    function loadAds() {
+    function loadClips() {
       const stored = localStorage.getItem('cira_ads');
       if (stored) {
         ads = JSON.parse(stored);
       } else {
         ads = [
-          { id: "ad001", title: "Book Early, Save More!", subtitle: "Up to 20% off on advance bookings", color: "#F5A623", accent: "#1E0A3C" },
-          { id: "ad002", title: "IMAX Experience", subtitle: "Feel every frame like never before", color: "#00D4AA", accent: "#0D0D1A" },
-          { id: "ad003", title: "Weekend Couple Pass", subtitle: "2 tickets + combo @ ₹999 only", color: "#E91E8C", accent: "#1A0A2E" },
-          { id: "ad004", title: "Cinepolis Star Club", subtitle: "Join & earn points on every booking", color: "#7C3AED", accent: "#0D0D1A" }
+          { 
+            id: "v001", 
+            title: "Cinema Popcorn Loop", 
+            videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-popcorn-in-a-red-and-white-striped-bucket-43187-large.mp4", 
+            duration: "15s", 
+            status: "active",
+            aspectRatio: "cover",
+            volume: "muted",
+            preload: "eager",
+            fileSize: "18.4 MB",
+            syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
+          },
+          { 
+            id: "v002", 
+            title: "Vintage Projector Loop", 
+            videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-film-projector-in-a-dark-room-43188-large.mp4", 
+            duration: "20s", 
+            status: "active",
+            aspectRatio: "contain",
+            volume: "muted",
+            preload: "eager",
+            fileSize: "24.1 MB",
+            syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
+          },
+          { 
+            id: "v003", 
+            title: "Empty Cinema Hall Loop", 
+            videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-movie-theater-with-empty-seats-43189-large.mp4", 
+            duration: "25s", 
+            status: "active",
+            aspectRatio: "cover",
+            volume: "muted",
+            preload: "lazy",
+            fileSize: "32.8 MB",
+            syncedTerminals: ["Lobby-01", "Concession-01"]
+          }
         ];
         localStorage.setItem('cira_ads', JSON.stringify(ads));
       }
-      renderAdList();
+      renderQueue();
+      updateTelemetry();
     }
 
-    function renderAdList() {
-      const listContainer = document.getElementById('ad-list');
+    function renderQueue() {
+      const tbody = document.getElementById('queue-body');
       if (ads.length === 0) {
-        listContainer.innerHTML = `
-          <div class="glass" style="border-radius:var(--radius-md); padding:20px; text-align:center; color:var(--text-muted); font-size:13px;">
-            No ads active. Add a creative to publish banners to the kiosk.
-          </div>
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align:center; padding:32px; color:var(--text-muted); font-weight:600;">
+              No video loops registered in active deployment queue. Add a movie clip to deploy.
+            </td>
+          </tr>
         `;
         return;
       }
 
-      listContainer.innerHTML = ads.map(ad => `
-        <div class="ad-list-card glass" style="border-left: 4px solid ${ad.color};">
-          <div class="ad-card-info">
-            <div class="ad-card-title" style="color: ${ad.color}">${ad.title}</div>
-            <div class="ad-card-sub">${ad.subtitle}</div>
-          </div>
-          <button class="delete-btn" onclick="deleteAd('${ad.id}')">🗑 Remove</button>
-        </div>
-      `).join('');
+      tbody.innerHTML = ads.map(ad => {
+        const checked = ad.status === 'active' ? 'checked' : '';
+        const statusBadge = ad.status === 'active' ? '<span class="badge active">Active</span>' : '<span class="badge paused">Paused</span>';
+        
+        let fitLabel = "Fill (Cropped)";
+        if (ad.aspectRatio === 'contain') fitLabel = "Letterbox (Fit)";
+        if (ad.aspectRatio === 'fill') fitLabel = "Stretch";
+
+        let volumeLabel = "Muted";
+        if (ad.volume === 'low') volumeLabel = "Low (15%)";
+        if (ad.volume === 'medium') volumeLabel = "Medium (40%)";
+        if (ad.volume === 'high') volumeLabel = "High (80%)";
+
+        const syncedCount = ad.syncedTerminals ? ad.syncedTerminals.length : 0;
+        const deployLabel = syncedCount === 3 ? "All Terminals (3/3)" : `${syncedCount}/3 Terminals`;
+
+        return `
+          <tr id="row-${ad.id}">
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <label class="switch">
+                  <input type="checkbox" ${checked} onchange="toggleStatus('${ad.id}')">
+                  <span class="slider"></span>
+                </label>
+                ${statusBadge}
+              </div>
+            </td>
+            <td style="font-weight:700; color:var(--primary);">${ad.title}</td>
+            <td><span style="font-size:12px; font-weight:500;">${fitLabel}</span></td>
+            <td><span style="font-size:12px; font-weight:500;">${volumeLabel}</span></td>
+            <td><span class="badge ${ad.preload === 'eager' ? 'eager' : 'lazy'}">${ad.preload}</span></td>
+            <td style="font-family:monospace; font-weight:600;">${ad.duration}</td>
+            <td style="font-family:monospace; font-weight:600;">${ad.fileSize || 'N/A'}</td>
+            <td>
+              <div style="font-size:12px; font-weight:600;">${deployLabel}</div>
+              <div style="font-size:10px; color:var(--text-muted);">${ad.syncedTerminals ? ad.syncedTerminals.join(', ') : 'None'}</div>
+            </td>
+            <td style="text-align:right;">
+              <div style="display:inline-flex; gap:8px;">
+                <button class="btn-console primary" style="padding:4px 8px; font-size:11px;" onclick='previewClipInSimulator(${JSON.stringify(ad)})'>▶ Preview</button>
+                <button class="btn-console" style="padding:4px 8px; font-size:11px; color:#EF4444; border-color:rgba(239, 68, 68, 0.2);" onclick="deleteClip('${ad.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    function addAd() {
-      const title = document.getElementById('ad-title').value.trim();
-      const sub = document.getElementById('ad-sub').value.trim();
+    function previewClipInSimulator(ad) {
+      const video = document.getElementById('kiosk-video');
+      const placeholder = document.getElementById('kiosk-placeholder');
+      const overlay = document.getElementById('kiosk-overlay');
+      const overlayTitle = document.getElementById('overlay-title');
+      const overlayDuration = document.getElementById('overlay-duration');
 
-      if (!title || !sub) {
-        alert("Please fill in both the Headline and Subtext fields.");
+      placeholder.style.display = 'none';
+      video.style.display = 'block';
+      overlay.style.display = 'flex';
+
+      // Set aspect ratio fitting mode
+      const fit = ad.aspectRatio || 'cover';
+      video.style.objectFit = fit;
+
+      // Set titles
+      overlayTitle.textContent = ad.title;
+      overlayDuration.textContent = ad.duration + ' Loop';
+
+      video.src = ad.videoUrl;
+      
+      // Control volume preview safely
+      const vol = ad.volume || 'muted';
+      if (vol === 'muted') {
+        video.muted = true;
+        video.volume = 0;
+      } else {
+        video.muted = false;
+        if (vol === 'low') video.volume = 0.15;
+        else if (vol === 'medium') video.volume = 0.40;
+        else if (vol === 'high') video.volume = 0.80;
+      }
+
+      video.load();
+      video.play().catch(e => {
+        console.warn("Simulator autoplay blocked, playing muted", e);
+        video.muted = true;
+        video.play().catch(err => console.error("Simulator failed to play entirely", err));
+      });
+
+      appendLog(`[PREVIEW] Loading trailer "${ad.title}" into simulator (Fit: ${fit}, Audio: ${vol}).`);
+    }
+
+    function toggleStatus(id) {
+      const ad = ads.find(a => a.id === id);
+      if (ad) {
+        ad.status = ad.status === 'active' ? 'inactive' : 'active';
+        localStorage.setItem('cira_ads', JSON.stringify(ads));
+        renderQueue();
+        updateTelemetry();
+        showToast(`Campaign status updated: "${ad.title}" is now ${ad.status.toUpperCase()}`);
+        appendLog(`[STATUS] Campaign "${ad.title}" status changed to ${ad.status}. Broadcasting layout update to kiosks.`);
+      }
+    }
+
+    function setFitOption(option) {
+      fitOptions.forEach(opt => {
+        const el = document.getElementById(`fit-${opt}`);
+        if (opt === option) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+      document.getElementById('clip-aspect').value = option;
+      
+      // If a preview video is actively playing, apply changes live to the simulator
+      const video = document.getElementById('kiosk-video');
+      if (video && video.style.display !== 'none') {
+        video.style.objectFit = option;
+        appendLog(`[SIMULATOR] Dynamic fit changed to ${option} (Live preview updated).`);
+      }
+    }
+
+    function setAudioOption(option) {
+      audioOptions.forEach(opt => {
+        const el = document.getElementById(`audio-${opt}`);
+        if (opt === option) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+      document.getElementById('clip-audio').value = option;
+
+      // Update simulator volume live
+      const video = document.getElementById('kiosk-video');
+      if (video && video.style.display !== 'none') {
+        if (option === 'muted') {
+          video.muted = true;
+          video.volume = 0;
+        } else {
+          video.muted = false;
+          if (option === 'low') video.volume = 0.15;
+          else if (option === 'medium') video.volume = 0.40;
+          else if (option === 'high') video.volume = 0.80;
+        }
+        appendLog(`[SIMULATOR] Dynamic audio changed to ${option} (Live preview updated).`);
+      }
+    }
+
+    function simulateUpload() {
+      const samples = [
+        { title: "Kaal Warrior Teaser", url: "https://assets.mixkit.co/videos/preview/mixkit-popcorn-in-a-red-and-white-striped-bucket-43187-large.mp4", duration: 15, size: "19.5 MB" },
+        { title: "Star Nomad Official Trailer", url: "https://assets.mixkit.co/videos/preview/mixkit-film-projector-in-a-dark-room-43188-large.mp4", duration: 30, size: "28.3 MB" },
+        { title: "Dhadkan Se Door - Teaser", url: "https://assets.mixkit.co/videos/preview/mixkit-movie-theater-with-empty-seats-43189-large.mp4", duration: 25, size: "22.1 MB" }
+      ];
+
+      const chosen = samples[Math.floor(Math.random() * samples.length)];
+      
+      document.getElementById('clip-title').value = chosen.title;
+      document.getElementById('clip-duration').value = chosen.duration;
+      document.getElementById('clip-url').value = chosen.url;
+      document.getElementById('clip-manual-url').value = "";
+      
+      document.getElementById('drop-zone-main').innerHTML = `✔️ <span style="color:#00D4AA; font-weight:700;">File Attached:</span> ${chosen.title.toLowerCase().replace(/\s+/g, '_')}.mp4`;
+      document.getElementById('drop-zone-sub').textContent = `Volume Size: ${chosen.size} // Ready to Publish`;
+
+      showToast("Mock video uploaded successfully");
+      appendLog(`[UPLOAD] Mock file attached: "${chosen.title}" (${chosen.size})`);
+      
+      // Auto preview on upload
+      previewClipInSimulator({
+        title: chosen.title,
+        videoUrl: chosen.url,
+        duration: chosen.duration + 's',
+        aspectRatio: document.getElementById('clip-aspect').value,
+        volume: document.getElementById('clip-audio').value
+      });
+    }
+
+    function handleUrlInput() {
+      const url = document.getElementById('clip-manual-url').value.trim();
+      document.getElementById('clip-url').value = url;
+      if (url) {
+        document.getElementById('drop-zone-main').textContent = "Select Movie Clip File or Drag & Drop Here";
+        document.getElementById('drop-zone-sub').textContent = "Supports MP4, WebM (Max 50MB)";
+      }
+    }
+
+    function addClip() {
+      const title = document.getElementById('clip-title').value.trim();
+      const durationNum = parseInt(document.getElementById('clip-duration').value) || 20;
+      const videoUrl = document.getElementById('clip-url').value.trim() || document.getElementById('clip-manual-url').value.trim();
+      const fit = document.getElementById('clip-aspect').value;
+      const vol = document.getElementById('clip-audio').value;
+      const preload = document.getElementById('clip-preload').value;
+
+      if (!title || !videoUrl) {
+        alert("IT Validation Error: Please provide a Campaign Name and select a Video clip source.");
         return;
       }
 
-      const newAd = {
-        id: 'ad_' + Date.now(),
+      const sizeMock = (Math.random() * 20 + 15).toFixed(1) + " MB";
+
+      const newClip = {
+        id: 'v_' + Date.now(),
         title: title,
-        subtitle: sub,
-        color: selectedPreset.color,
-        accent: selectedPreset.accent
+        videoUrl: videoUrl,
+        duration: durationNum + 's',
+        status: 'active',
+        aspectRatio: fit,
+        volume: vol,
+        preload: preload,
+        fileSize: sizeMock,
+        syncedTerminals: ["Lobby-01", "Lobby-02", "Concession-01"]
       };
 
-      ads.push(newAd);
+      ads.push(newClip);
       localStorage.setItem('cira_ads', JSON.stringify(ads));
-      renderAdList();
+      renderQueue();
+      updateTelemetry();
+
+      // Reset Form
+      document.getElementById('clip-title').value = '';
+      document.getElementById('clip-duration').value = '';
+      document.getElementById('clip-url').value = '';
+      document.getElementById('clip-manual-url').value = '';
+      document.getElementById('drop-zone-main').textContent = "Select Movie Clip File or Drag & Drop Here";
+      document.getElementById('drop-zone-sub').textContent = "Supports MP4, WebM (Max 50MB)";
       
-      // Reset inputs
-      document.getElementById('ad-title').value = '';
-      document.getElementById('ad-sub').value = '';
-      updatePreview();
-      
-      showToast("Creative Published & Synced!");
+      // Reset radio select states
+      setFitOption('cover');
+      setAudioOption('muted');
+      document.getElementById('clip-preload').value = 'eager';
+
+      showToast("Campaign video published & broadcasted successfully!");
+      appendLog(`[SYNC] Broadcasting new playlist layout. Clip "${title}" added (Cache size: ${sizeMock}, Preload: ${preload}).`);
     }
 
-    function deleteAd(id) {
-      ads = ads.filter(ad => ad.id !== id);
+    function deleteClip(id) {
+      const ad = ads.find(a => a.id === id);
+      const title = ad ? ad.title : 'Unknown';
+
+      ads = ads.filter(a => a.id !== id);
       localStorage.setItem('cira_ads', JSON.stringify(ads));
-      renderAdList();
-      showToast("Creative removed successfully");
+      renderQueue();
+      updateTelemetry();
+      
+      // Reset simulator if deleted clip was playing
+      const video = document.getElementById('kiosk-video');
+      video.pause();
+      video.style.display = 'none';
+      document.getElementById('kiosk-placeholder').style.display = 'flex';
+      document.getElementById('kiosk-overlay').style.display = 'none';
+
+      showToast("Campaign removed from terminal playlist");
+      appendLog(`[DELETE] Campaign "${title}" deleted. Sending cache-invalidation commands to terminal nodes.`);
     }
 
     function resetToDefaults() {
       localStorage.removeItem('cira_ads');
-      loadAds();
-      showToast("Reset to standard mock ads");
+      loadClips();
+      
+      // Reset simulator
+      const video = document.getElementById('kiosk-video');
+      video.pause();
+      video.style.display = 'none';
+      document.getElementById('kiosk-placeholder').style.display = 'flex';
+      document.getElementById('kiosk-overlay').style.display = 'none';
+
+      showToast("Console reset to default Cinepolis mock clips");
+      appendLog("[SYSTEM] Executed full local cache rebuild. All kiosk nodes forced to sync default campaigns.");
+    }
+
+    function updateTelemetry() {
+      const activeClips = ads.filter(a => a.status === 'active');
+      
+      // Calculate total cache size
+      let totalMB = 0;
+      ads.forEach(a => {
+        const num = parseFloat(a.fileSize) || 20.0;
+        totalMB += num;
+      });
+
+      // Calculate total active playlist duration
+      let totalDuration = 0;
+      activeClips.forEach(a => {
+        const sec = parseInt(a.duration) || 20;
+        totalDuration += sec;
+      });
+
+      document.getElementById('metric-clips').textContent = `${activeClips.length} Active`;
+      document.getElementById('metric-cache').textContent = `${totalMB.toFixed(1)} MB`;
+      document.getElementById('metric-duration').textContent = `${totalDuration} Secs`;
+      
+      // Update terminals online
+      document.getElementById('metric-terminals').textContent = "3 Online";
     }
 
     function showToast(msg) {
@@ -453,7 +1163,47 @@
       }, 3000);
     }
 
-    // Run Initialization
+    // LOGS SIMULATION
+    function appendLog(text) {
+      const logsBody = document.getElementById('logs-body');
+      const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const logLine = document.createElement('div');
+      logLine.textContent = `[${timeStr}] ${text}`;
+      logsBody.appendChild(logLine);
+      logsBody.scrollTop = logsBody.scrollHeight;
+    }
+
+    function startLogsSimulation() {
+      const logs = [
+        "KIOSK-LOBBY-01: Heartbeat acknowledged. Signal strength: -45dBm.",
+        "KIOSK-LOBBY-02: Attract loop index updated successfully.",
+        "KIOSK-CONCESSION-01: Local Vercel node caches validated. 100% matched.",
+        "KIOSK-LOBBY-01: Rendering idle attract loop video layer.",
+        "KIOSK-CONCESSION-01: Audio channel validated. Mode: MUTED.",
+        "SYSTEM: Memory compaction clean complete. Disk space available: 412 MB.",
+        "SYSTEM: Broadcasting synchronization configuration handshake."
+      ];
+
+      // Initial populate
+      logs.forEach(l => appendLog(l));
+
+      // Periodic updates
+      setInterval(() => {
+        const kiosks = ["KIOSK-LOBBY-01", "KIOSK-LOBBY-02", "KIOSK-CONCESSION-01"];
+        const k = kiosks[Math.floor(Math.random() * kiosks.length)];
+        const actions = [
+          "Attract loop heartbeat OK.",
+          "Preloading video caches...",
+          "Checking connection to Vista API gateway...",
+          "Rendering frame sequence successfully.",
+          "Temperature nominal: 42°C.",
+          "Cached local assets verified."
+        ];
+        const a = actions[Math.floor(Math.random() * actions.length)];
+        appendLog(`${k}: ${a}`);
+      }, 7000);
+    }
+
     window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
