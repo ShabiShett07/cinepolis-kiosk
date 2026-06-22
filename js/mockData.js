@@ -227,12 +227,20 @@ const MOCK_DATA = {
     { code: "hi", label: "Hindi", native: "हिन्दी" }
   ],
 
-  adCreatives: [
-    { id: "ad001", title: "Book Early, Save More!", subtitle: "Up to 20% off on advance bookings", color: "#F5A623", accent: "#1E0A3C" },
-    { id: "ad002", title: "IMAX Experience", subtitle: "Feel every frame like never before", color: "#00D4AA", accent: "#0D0D1A" },
-    { id: "ad003", title: "Weekend Couple Pass", subtitle: "2 tickets + combo @ ₹999 only", color: "#E91E8C", accent: "#1A0A2E" },
-    { id: "ad004", title: "Cinepolis Star Club", subtitle: "Join & earn points on every booking", color: "#7C3AED", accent: "#0D0D1A" }
-  ]
+  adCreatives: (() => {
+    try {
+      const stored = localStorage.getItem('cira_ads');
+      if (stored) return JSON.parse(stored);
+    } catch(e) {
+      console.warn("Failed to load stored ads", e);
+    }
+    return [
+      { id: "ad001", title: "Book Early, Save More!", subtitle: "Up to 20% off on advance bookings", color: "#F5A623", accent: "#1E0A3C" },
+      { id: "ad002", title: "IMAX Experience", subtitle: "Feel every frame like never before", color: "#00D4AA", accent: "#0D0D1A" },
+      { id: "ad003", title: "Weekend Couple Pass", subtitle: "2 tickets + combo @ ₹999 only", color: "#E91E8C", accent: "#1A0A2E" },
+      { id: "ad004", title: "Cinepolis Star Club", subtitle: "Join & earn points on every booking", color: "#7C3AED", accent: "#0D0D1A" }
+    ];
+  })()
 };
 
 // Vista-like API simulation
