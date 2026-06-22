@@ -28,7 +28,7 @@ const CIRA_POSES = {
   [SCENES.MOVIE_DETAILS]: 'pointing_right',
   [SCENES.SHOWTIME_SELECTION]: 'pointing',
   [SCENES.TICKET_COUNT]: 'thinking',
-  [SCENES.SEAT_SELECTION]: 'pointing',
+  [SCENES.SEAT_SELECTION]: null,
   [SCENES.MOBILE_NUMBER]: 'idle',
   [SCENES.FOOD_BEVERAGES]: 'idle',
   [SCENES.PAYMENT]: null,

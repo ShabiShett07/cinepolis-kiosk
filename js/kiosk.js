@@ -508,11 +508,14 @@ class CinemaKiosk {
           <div class="legend-item"><div class="legend-dot" style="background:#EF4444;border:1px solid #DC2626"></div> Booked</div>
         </div>
       </div>
-      <div style="margin-top:16px;">
+      <div style="margin-top:16px; display:flex; flex-direction:column; align-items:center;">
         <div id="seat-status" style="font-family:'Outfit',sans-serif;font-size:var(--text-base);color:var(--text-secondary);margin-bottom:12px;text-align:center;">Select ${needed} seat${needed > 1 ? 's' : ''}</div>
-        <div style="display:flex;gap:12px;justify-content:center;align-items:center;">
+        <div style="display:flex;gap:12px;justify-content:center;align-items:center;width:100%;">
           <button class="btn btn-ghost btn-xl" id="btn-back-seats" onclick="window.kiosk.showScreen('ticket-count')">← Back</button>
           <button class="btn btn-primary btn-xl" id="btn-confirm-seats" disabled onclick="window.kiosk.onSeatsConfirmed()">Confirm Seats →</button>
+        </div>
+        <div id="cira-seats-character" style="margin-top:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+          <img src="assets/cira/cira_pointing_up.webp" style="height:220px; width:auto; object-fit:contain; animation: breathe 4s ease-in-out infinite; display:block;" alt="Cira Pointing Up">
         </div>
       </div>
     `;
