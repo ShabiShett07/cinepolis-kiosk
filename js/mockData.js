@@ -229,7 +229,7 @@ const MOCK_DATA = {
 
   adCreatives: (() => {
     try {
-      const stored = localStorage.getItem('cira_ads');
+      const stored = localStorage.getItem('cira_ads_v2');
       if (stored) return JSON.parse(stored);
     } catch(e) {
       console.warn("Failed to load stored ads", e);

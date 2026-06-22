@@ -795,7 +795,7 @@
 
     function loadClips() {
       // Clear any old cached sample videos that may be stored from previous sessions
-      const stored = localStorage.getItem('cira_ads');
+      const stored = localStorage.getItem('cira_ads_v2');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -804,7 +804,7 @@
             a.videoUrl && a.videoUrl.includes('commondatastorage.googleapis.com')
           );
           if (hasSamples) {
-            localStorage.removeItem('cira_ads');
+            localStorage.removeItem('cira_ads_v2');
             ads = [];
           } else {
             ads = parsed;
@@ -957,7 +957,7 @@
       const ad = ads.find(a => a.id === id);
       if (ad) {
         ad.status = ad.status === 'active' ? 'inactive' : 'active';
-        localStorage.setItem('cira_ads', JSON.stringify(ads));
+        localStorage.setItem('cira_ads_v2', JSON.stringify(ads));
         renderQueue();
         updateTelemetry();
         showToast(`Campaign status updated: "${ad.title}" is now ${ad.status.toUpperCase()}`);
@@ -1057,7 +1057,7 @@
       };
 
       ads.push(newClip);
-      localStorage.setItem('cira_ads', JSON.stringify(ads));
+      localStorage.setItem('cira_ads_v2', JSON.stringify(ads));
       renderQueue();
       updateTelemetry();
 
@@ -1083,7 +1083,7 @@
       const title = ad ? ad.title : 'Unknown';
 
       ads = ads.filter(a => a.id !== id);
-      localStorage.setItem('cira_ads', JSON.stringify(ads));
+      localStorage.setItem('cira_ads_v2', JSON.stringify(ads));
       renderQueue();
       updateTelemetry();
       
@@ -1105,7 +1105,7 @@
     }
 
     function resetToDefaults() {
-      localStorage.removeItem('cira_ads');
+      localStorage.removeItem('cira_ads_v2');
       loadClips();
       
       // Reset simulator by restoring placeholder

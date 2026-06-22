@@ -48,7 +48,7 @@ class CinemaKiosk {
   startIdleAds() {
     let ads = [];
     try {
-      const stored = localStorage.getItem('cira_ads');
+      const stored = localStorage.getItem('cira_ads_v2');
       if (stored) {
         ads = JSON.parse(stored);
       }
