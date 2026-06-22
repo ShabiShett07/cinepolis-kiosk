@@ -197,12 +197,6 @@ class CinemaKiosk {
       target.classList.add('active');
       this.renderScreen(screenId, data);
     }
-    // Toggle idle-mode so the header hides during the attract loop
-    if (screenId === 'idle') {
-      document.body.classList.add('idle-mode');
-    } else {
-      document.body.classList.remove('idle-mode');
-    }
   }
 
   renderScreen(screenId, data) {

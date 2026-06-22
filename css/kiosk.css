@@ -59,7 +59,7 @@ body {
 
 /* ===================== Header — MUST be absolute so it stays inside #kiosk-root ========================= */
 #kiosk-header {
-  position: absolute;   /* NOT fixed — fixed escapes the container */
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -70,13 +70,6 @@ body {
   padding: 10px 16px;
   background: transparent;
   transition: opacity 0.3s ease;
-}
-
-/* Hide header completely when idle/attract screen is active */
-#screen-idle.active ~ * #kiosk-header,
-body.idle-mode #kiosk-header {
-  opacity: 0;
-  pointer-events: none;
 }
 
 .kiosk-logo {
@@ -104,7 +97,8 @@ body.idle-mode #kiosk-header {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  color: var(--text-primary);
+  color: #FFFFFF;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   line-height: 1;
 }
 
@@ -127,14 +121,16 @@ body.idle-mode #kiosk-header {
   font-family: 'Outfit', sans-serif;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #FFFFFF;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
   text-align: right;
   line-height: 1.3;
 }
 
 .kiosk-location {
   font-size: 10px;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   text-align: right;
 }
 
