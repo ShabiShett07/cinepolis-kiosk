@@ -61,7 +61,7 @@ const SCENE_AUDIO_FILES = {
   [SCENES.NAMASTE_GREETING]: 'assets/scripts/greetings.mp3',
   [SCENES.LANGUAGE_SELECTION]: 'assets/scripts/langauge.mp3',
   [SCENES.MOVIE_BROWSING]: 'assets/scripts/movieselect.mp3',
-  [SCENES.MOVIE_DETAILS]: 'assets/scripts/moviedetails.mp3',
+  [SCENES.MOVIE_DETAILS]: 'assets/scripts/moviedetailsandtimings.mp3',
   [SCENES.SHOWTIME_SELECTION]: 'assets/scripts/timings.mp3',
   [SCENES.TICKET_COUNT]: 'assets/scripts/numberoftickets.mp3',
   [SCENES.SEAT_SELECTION]: 'assets/scripts/seatmap.mp3',
@@ -120,7 +120,7 @@ class CiraSceneManager {
       let audioUrl = SCENE_AUDIO_FILES[scene];
       if (this.selectedLanguage === 'hi') {
         if (scene === SCENES.MOVIE_BROWSING) audioUrl = 'assets/scripts_hindi/movieselecthindi.mp3';
-        else if (scene === SCENES.MOVIE_DETAILS) audioUrl = 'assets/scripts_hindi/moviedetailshindi.mp3';
+        else if (scene === SCENES.MOVIE_DETAILS) audioUrl = 'assets/scripts_hindi/moviedetailsandtimingshindi.mp3';
         else if (scene === SCENES.SHOWTIME_SELECTION) audioUrl = 'assets/scripts_hindi/timingshindi.mp3';
         else if (scene === SCENES.TICKET_COUNT) audioUrl = 'assets/scripts_hindi/numberofticketshindi.mp3';
         else if (scene === SCENES.SEAT_SELECTION) audioUrl = 'assets/scripts_hindi/seatmaphindi.mp3';

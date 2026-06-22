@@ -297,11 +297,36 @@ class CinemaKiosk {
     const container = document.getElementById('movie-detail-content');
     if (!container) return;
 
+    const todayShowtimes = movie.showtimes.filter(s => s.date === 'Today');
+    const tomorrowShowtimes = movie.showtimes.filter(s => s.date === 'Tomorrow');
+
+    const showtimeCard = (st) => {
+      const seatsClass = st.available <= 15 ? 'critical' : st.available <= 40 ? 'low' : 'good';
+      const seatsLabel = st.available <= 15 ? '🔴 Almost Full' : st.available <= 40 ? '🟡 Filling Fast' : `🟢 ${st.available} Available`;
+      return `
+        <div class="showtime-card ${st.available <= 15 ? 'almost-full' : ''}" onclick="window.kiosk.onShowtimeSelected('${st.id}')" id="showtime-${st.id}">
+          <div>
+            <div class="showtime-time">${st.time}</div>
+            <div class="showtime-screen">${st.screen}</div>
+          </div>
+          <div class="showtime-availability">
+            <div class="showtime-seats ${seatsClass}">${seatsLabel}</div>
+          </div>
+        </div>
+      `;
+    };
+
     container.innerHTML = `
       <div class="detail-layout animate-fade-in">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="window.kiosk.showScreen('movies')">← Back</button>
+          <div style="font-family:'Outfit',sans-serif; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Movie Details & Timings</div>
+        </div>
+
         <div>
           <img class="detail-poster" src="${movie.poster}" alt="${movie.title}" onerror="this.style.background='linear-gradient(135deg,#1E0A3C,#3D1A7A)';this.style.minHeight='380px'">
         </div>
+
         <div>
           <div class="detail-title">${movie.title}</div>
           <div class="detail-meta-row">
@@ -323,11 +348,29 @@ class CinemaKiosk {
             <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Formats Available</div>
             <div style="display:flex;gap:8px;">${movie.format.map(f => `<span class="badge badge-success">${f}</span>`).join('')}</div>
           </div>
-          <div style="display:flex;gap:12px;">
-            <button class="btn btn-primary btn-lg" id="btn-book-now" onclick="window.kiosk.onShowMovieShowtimes('${movie.id}')">🎟 Book Now</button>
-            <button class="btn btn-ghost" onclick="window.kiosk.showScreen('movies')">← Back</button>
-          </div>
         </div>
+
+        <!-- Timings Section -->
+        <div class="divider" style="margin:24px 0 16px;"></div>
+        
+        <div>
+          <h3 class="screen-title" style="font-size:18px; margin-bottom:4px;">Select Showtime</h3>
+          <p class="screen-subtitle" style="font-size:12px; margin-bottom:16px;">Choose a timing to begin booking</p>
+        </div>
+
+        ${todayShowtimes.length ? `
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;">Today</div>
+            <div class="showtime-grid">${todayShowtimes.map(showtimeCard).join('')}</div>
+          </div>
+        ` : ''}
+
+        ${tomorrowShowtimes.length ? `
+          <div style="margin-bottom:24px;">
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:12px;">Tomorrow</div>
+            <div class="showtime-grid">${tomorrowShowtimes.map(showtimeCard).join('')}</div>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -404,7 +447,7 @@ class CinemaKiosk {
           <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">${this.state.selectedShowtime?.screen || ''} · ${this.state.selectedShowtime?.time || ''}</div>
         </div>
         <div style="display:flex;gap:12px;justify-content:center;align-items:center;">
-          <button class="btn btn-ghost btn-xl" onclick="window.kiosk.showScreen('showtimes', window.kiosk.state.selectedMovie)">← Back</button>
+          <button class="btn btn-ghost btn-xl" onclick="window.kiosk.showScreen('movie-detail', window.kiosk.state.selectedMovie)">← Back</button>
           <button class="btn btn-primary btn-xl" id="btn-confirm-tickets" onclick="window.kiosk.onTicketCountConfirmed()" ${this.state.ticketCount < 1 ? 'disabled' : ''}>Select Seats →</button>
         </div>
       </div>
