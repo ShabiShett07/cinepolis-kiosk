@@ -169,8 +169,15 @@ body {
   height: 200px;
   width: auto;
   object-fit: contain;
-  display: block;
+  display: none;
 }
+
+#cira-character.pose-idle .pose-img-idle { display: block; }
+#cira-character.pose-namaste .pose-img-namaste { display: block; }
+#cira-character.pose-pointing .pose-img-pointing { display: block; }
+#cira-character.pose-pointing-right .pose-img-pointing_right { display: block; }
+#cira-character.pose-thinking .pose-img-thinking { display: block; }
+#cira-character.pose-celebrate .pose-img-celebrate { display: block; }
 
 #cira-character.pose-idle .cira-img { animation: breathe 4s ease-in-out infinite; }
 #cira-character.pose-thinking .cira-img { animation: breathe 4s ease-in-out infinite; }

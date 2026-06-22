@@ -79,9 +79,56 @@ class CiraSceneManager {
     this.idleTimer = null;
     this.animationQueue = [];
     this.isAnimating = false;
+    this.currentAudio = null;
+
+    this.audioCache = {
+      en: {},
+      hi: {}
+    };
+    this.preloadAudioCache();
 
     this.loadVoices();
     window.speechSynthesis.onvoiceschanged = () => this.loadVoices();
+  }
+
+  preloadAudioCache() {
+    const englishPaths = {
+      [SCENES.NAMASTE_GREETING]: 'assets/scripts/greetings.mp3',
+      [SCENES.LANGUAGE_SELECTION]: 'assets/scripts/langauge.mp3',
+      [SCENES.MOVIE_BROWSING]: 'assets/scripts/movieselect.mp3',
+      [SCENES.MOVIE_DETAILS]: 'assets/scripts/moviedetailsandtimings.mp3',
+      [SCENES.SHOWTIME_SELECTION]: 'assets/scripts/timings.mp3',
+      [SCENES.TICKET_COUNT]: 'assets/scripts/numberoftickets.mp3',
+      [SCENES.SEAT_SELECTION]: 'assets/scripts/seatmap.mp3',
+      [SCENES.MOBILE_NUMBER]: 'assets/scripts/mobilenumber.mp3',
+      [SCENES.PAYMENT]: 'assets/scripts/payment.mp3',
+      [SCENES.SUCCESS]: 'assets/scripts/thanking.mp3'
+    };
+
+    const hindiPaths = {
+      [SCENES.NAMASTE_GREETING]: 'assets/scripts/greetings.mp3',
+      [SCENES.LANGUAGE_SELECTION]: 'assets/scripts/langauge.mp3',
+      [SCENES.MOVIE_BROWSING]: 'assets/scripts_hindi/movieselecthindi.mp3',
+      [SCENES.MOVIE_DETAILS]: 'assets/scripts_hindi/moviedetailsandtimingshindi.mp3',
+      [SCENES.SHOWTIME_SELECTION]: 'assets/scripts_hindi/timingshindi.mp3',
+      [SCENES.TICKET_COUNT]: 'assets/scripts_hindi/numberofticketshindi.mp3',
+      [SCENES.SEAT_SELECTION]: 'assets/scripts_hindi/seatmaphindi.mp3',
+      [SCENES.MOBILE_NUMBER]: 'assets/scripts_hindi/mobilenumberhindi.mp3',
+      [SCENES.PAYMENT]: 'assets/scripts_hindi/paymenthindi.mp3',
+      [SCENES.SUCCESS]: 'assets/scripts_hindi/thanking.mp3'
+    };
+
+    for (const scene in englishPaths) {
+      const audio = new Audio(englishPaths[scene]);
+      audio.preload = 'auto';
+      this.audioCache.en[scene] = audio;
+    }
+
+    for (const scene in hindiPaths) {
+      const audio = new Audio(hindiPaths[scene]);
+      audio.preload = 'auto';
+      this.audioCache.hi[scene] = audio;
+    }
   }
 
   loadVoices() {
@@ -117,54 +164,53 @@ class CiraSceneManager {
 
     // If pre-recorded audio is mapped for this scene
     if (scene && SCENE_AUDIO_FILES[scene]) {
-      let audioUrl = SCENE_AUDIO_FILES[scene];
-      if (this.selectedLanguage === 'hi') {
-        if (scene === SCENES.MOVIE_BROWSING) audioUrl = 'assets/scripts_hindi/movieselecthindi.mp3';
-        else if (scene === SCENES.MOVIE_DETAILS) audioUrl = 'assets/scripts_hindi/moviedetailsandtimingshindi.mp3';
-        else if (scene === SCENES.SHOWTIME_SELECTION) audioUrl = 'assets/scripts_hindi/timingshindi.mp3';
-        else if (scene === SCENES.TICKET_COUNT) audioUrl = 'assets/scripts_hindi/numberofticketshindi.mp3';
-        else if (scene === SCENES.SEAT_SELECTION) audioUrl = 'assets/scripts_hindi/seatmaphindi.mp3';
-        else if (scene === SCENES.MOBILE_NUMBER) audioUrl = 'assets/scripts_hindi/mobilenumberhindi.mp3';
-        else if (scene === SCENES.PAYMENT) audioUrl = 'assets/scripts_hindi/paymenthindi.mp3';
-        else if (scene === SCENES.SUCCESS) audioUrl = 'assets/scripts_hindi/thanking.mp3';
-      }
-      console.log(`[CIRA Audio] Playing pre-recorded voice for scene ${scene} (Lang: ${this.selectedLanguage}): ${audioUrl}`);
+      const lang = this.selectedLanguage === 'hi' ? 'hi' : 'en';
+      const audio = this.audioCache[lang][scene];
 
-      this.speechSynthesis.cancel();
-      if (this.currentAudio) {
-        this.currentAudio.pause();
-        this.currentAudio = null;
-      }
+      if (audio) {
+        console.log(`[CIRA Audio] Playing preloaded voice for scene ${scene} (Lang: ${this.selectedLanguage})`);
+        
+        this.speechSynthesis.cancel();
+        if (this.currentAudio) {
+          try {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
+          } catch(e) {}
+          this.currentAudio = null;
+        }
 
-      const audio = new Audio(audioUrl);
-      this.currentAudio = audio;
+        this.currentAudio = audio;
+        audio.currentTime = 0;
 
-      const volume = (parseFloat(localStorage.getItem('cira_voice_volume')) || 100) / 100;
-      audio.volume = volume;
+        const volume = (parseFloat(localStorage.getItem('cira_voice_volume')) || 100) / 100;
+        audio.volume = volume;
 
-      audio.onended = () => {
+        audio.onended = () => {
+          onEnd && onEnd();
+        };
+        audio.onerror = (e) => {
+          console.warn(`[CIRA Audio] Failed to play cached audio for scene ${scene}:`, e);
+          if (scene === SCENES.NAMASTE_GREETING) {
+            setTimeout(() => {
+              onEnd && onEnd();
+            }, 1600);
+          } else {
+            onEnd && onEnd();
+          }
+        };
+        audio.play().catch(e => {
+          console.warn(`[CIRA Audio] Play blocked/delayed for scene ${scene}:`, e);
+          if (scene === SCENES.NAMASTE_GREETING) {
+            setTimeout(() => {
+              onEnd && onEnd();
+            }, 1600);
+          } else {
+            onEnd && onEnd();
+          }
+        });
+      } else {
         onEnd && onEnd();
-      };
-      audio.onerror = (e) => {
-        console.warn(`[CIRA Audio] Failed to play pre-recorded audio for scene ${scene}:`, e);
-        if (scene === SCENES.NAMASTE_GREETING) {
-          setTimeout(() => {
-            onEnd && onEnd();
-          }, 1600); // 1.6s matches greeting.mp3 duration
-        } else {
-          onEnd && onEnd();
-        }
-      };
-      audio.play().catch(e => {
-        console.warn(`[CIRA Audio] Play blocked for scene ${scene}:`, e);
-        if (scene === SCENES.NAMASTE_GREETING) {
-          setTimeout(() => {
-            onEnd && onEnd();
-          }, 1600); // 1.6s matches greeting.mp3 duration
-        } else {
-          onEnd && onEnd();
-        }
-      });
+      }
     } else {
       onEnd && onEnd();
     }
@@ -213,23 +259,7 @@ class CiraSceneManager {
       return;
     }
 
-    // Update image source
-    const img = ciraEl.querySelector('img.cira-img');
-    if (img) {
-      if (pose === 'namaste') {
-        img.src = 'assets/cira/cira_namaste.webp';
-      } else if (pose === 'pointing') {
-        img.src = 'assets/cira/cira_pointing.webp';
-      } else if (pose === 'pointing_right') {
-        img.src = 'assets/cira/cira_pointing_right.webp';
-      } else if (pose === 'thinking') {
-        img.src = 'assets/cira/cira_thinking.webp';
-      } else if (pose === 'celebrate') {
-        img.src = 'assets/cira/cira_celebrate.webp';
-      } else {
-        img.src = 'assets/cira/cira_idle.webp';
-      }
-    }
+
 
     // Add transition animation class
     ciraEl.classList.add('cira-transition');
