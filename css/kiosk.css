@@ -68,9 +68,15 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.0) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: transparent;
+  transition: opacity 0.3s ease;
+}
+
+/* Hide header completely when idle/attract screen is active */
+#screen-idle.active ~ * #kiosk-header,
+body.idle-mode #kiosk-header {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .kiosk-logo {

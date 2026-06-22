@@ -120,19 +120,18 @@ class CinemaKiosk {
 
       container.innerHTML = `
         <div class="idle-ad-slide active" style="width:100%;height:100%;position:relative;background:#000;overflow:hidden;">
-          <video id="idle-ad-video" autoplay playsinline style="width:100%;height:100%;object-fit:${fit};opacity:0.65;position:absolute;inset:0;">
+          <video id="idle-ad-video" autoplay playsinline style="width:100%;height:100%;object-fit:${fit};opacity:1;position:absolute;inset:0;">
             <source src="${videoSrc}" type="video/mp4">
           </video>
-          <div class="idle-overlay" style="z-index:2;position:relative;">
-            <div class="idle-tap-prompt">
-              <div style="font-family:'Outfit',sans-serif;font-size:clamp(24px,4vw,48px);font-weight:900;text-align:center;color:var(--text-primary);margin-bottom:8px;text-shadow:0 4px 15px rgba(0,0,0,0.6);">${ad.title}</div>
-              <div style="font-size:clamp(12px,1.5vw,16px);color:var(--text-secondary);text-align:center;margin-bottom:40px;text-shadow:0 2px 8px rgba(0,0,0,0.6);">${ad.duration} Loop Clip</div>
-              <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
-                <div class="idle-tap-inner">👆</div>
-              </div>
-              <div class="idle-tap-text" style="color:var(--text-primary);text-shadow:0 2px 10px rgba(0,0,0,0.8);">Tap to Start</div>
-              <div class="idle-tap-sub" style="color:var(--text-secondary);text-shadow:0 2px 8px rgba(0,0,0,0.6);">Touch anywhere to begin booking</div>
+          <!-- Dark gradient fade at bottom only -->
+          <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 40%, transparent 70%);z-index:1;"></div>
+          <!-- Bottom-anchored content: tap ring + movie title -->
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;display:flex;flex-direction:column;align-items:center;padding-bottom:60px;gap:16px;">
+            <div class="idle-tap-ring" onclick="window.kiosk.onUserDetected()">
+              <div class="idle-tap-inner">👆</div>
             </div>
+            <div style="color:#FFFFFF;font-family:'Outfit',sans-serif;font-size:clamp(13px,2vw,18px);font-weight:700;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,0.9);letter-spacing:0.3px;">Tap to Start</div>
+            <div style="color:rgba(255,255,255,0.75);font-size:clamp(11px,1.5vw,14px);text-align:center;text-shadow:0 2px 8px rgba(0,0,0,0.8);">${ad.title}</div>
           </div>
         </div>
       `;
@@ -197,6 +196,12 @@ class CinemaKiosk {
     if (target) {
       target.classList.add('active');
       this.renderScreen(screenId, data);
+    }
+    // Toggle idle-mode so the header hides during the attract loop
+    if (screenId === 'idle') {
+      document.body.classList.add('idle-mode');
+    } else {
+      document.body.classList.remove('idle-mode');
     }
   }
 
