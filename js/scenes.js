@@ -129,6 +129,15 @@ class CiraSceneManager {
       audio.preload = 'auto';
       this.audioCache.hi[scene] = audio;
     }
+
+    // Preload timeout audio files
+    const timeoutAudioEn = new Audio('assets/scripts/timedout.mp3');
+    timeoutAudioEn.preload = 'auto';
+    this.audioCache.en['timeout'] = timeoutAudioEn;
+
+    const timeoutAudioHi = new Audio('assets/scripts_hindi/timedouthindi.mp3');
+    timeoutAudioHi.preload = 'auto';
+    this.audioCache.hi['timeout'] = timeoutAudioHi;
   }
 
   loadVoices() {
@@ -147,7 +156,7 @@ class CiraSceneManager {
     return female || this.voices[0];
   }
 
-  speak(text, onEnd, scene = null) {
+  speak(text, onEnd, scene = null, data = null) {
     const enableVoice = localStorage.getItem('cira_enable_voice') !== 'false';
     
     // If voice is disabled, skip audio playback but handle transition timings gracefully
@@ -162,13 +171,15 @@ class CiraSceneManager {
       return;
     }
 
-    // If pre-recorded audio is mapped for this scene
-    if (scene && SCENE_AUDIO_FILES[scene]) {
+    const isTimeoutExit = (scene === SCENES.EXIT && data && data.isTimeout);
+
+    // If pre-recorded audio is mapped for this scene or it is a timeout
+    if (isTimeoutExit || (scene && SCENE_AUDIO_FILES[scene])) {
       const lang = this.selectedLanguage === 'hi' ? 'hi' : 'en';
-      const audio = this.audioCache[lang][scene];
+      const audio = isTimeoutExit ? this.audioCache[lang]['timeout'] : this.audioCache[lang][scene];
 
       if (audio) {
-        console.log(`[CIRA Audio] Playing preloaded voice for scene ${scene} (Lang: ${this.selectedLanguage})`);
+        console.log(`[CIRA Audio] Playing preloaded voice for scene ${scene} (Lang: ${this.selectedLanguage}, Timeout: ${isTimeoutExit})`);
         
         this.speechSynthesis.cancel();
         if (this.currentAudio) {
@@ -216,11 +227,11 @@ class CiraSceneManager {
     }
   }
 
-  speakForScene(scene, onEnd) {
+  speakForScene(scene, onEnd, data = null) {
     const lines = VOICE_LINES[scene];
     if (!lines) { onEnd && onEnd(); return; }
     const text = lines[this.selectedLanguage] || lines['en'];
-    this.speak(text, onEnd, scene);
+    this.speak(text, onEnd, scene, data);
   }
 
   transitionTo(scene, data, onVoiceEnd) {
@@ -228,7 +239,7 @@ class CiraSceneManager {
     const prev = this.currentScene;
     this.currentScene = scene;
     this.updateCiraState(scene, data);
-    this.speakForScene(scene, onVoiceEnd);
+    this.speakForScene(scene, onVoiceEnd, data);
     this.setupIdlePrompt(scene);
     document.dispatchEvent(new CustomEvent('sceneChange', { detail: { scene, prev, data } }));
   }
