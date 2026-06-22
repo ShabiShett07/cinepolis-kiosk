@@ -227,20 +227,23 @@ class CiraSceneManager {
     this.clearIdleTimer();
     const prev = this.currentScene;
     this.currentScene = scene;
-    this.updateCiraState(scene);
+    this.updateCiraState(scene, data);
     this.speakForScene(scene, onVoiceEnd);
     this.setupIdlePrompt(scene);
     document.dispatchEvent(new CustomEvent('sceneChange', { detail: { scene, prev, data } }));
   }
 
-  updateCiraState(scene) {
+  updateCiraState(scene, data) {
     const ciraEl = document.getElementById('cira-character');
     if (!ciraEl) return;
 
-    const pose = CIRA_POSES[scene];
+    let pose = CIRA_POSES[scene];
+    if (scene === SCENES.EXIT && data && data.isTimeout) {
+      pose = 'disappoint';
+    }
 
     // Remove all pose classes
-    ciraEl.classList.remove('pose-idle', 'pose-namaste', 'pose-pointing', 'pose-pointing-right', 'pose-thinking', 'pose-celebrate', 'cira-hidden');
+    ciraEl.classList.remove('pose-idle', 'pose-namaste', 'pose-pointing', 'pose-pointing-right', 'pose-thinking', 'pose-celebrate', 'pose-disappoint', 'cira-hidden');
 
     if (scene === SCENES.USER_DETECTED || scene === SCENES.NAMASTE_GREETING) {
       ciraEl.classList.add('cira-centered');
@@ -275,7 +278,7 @@ class CiraSceneManager {
         const prompt = IDLE_PROMPTS[scene];
         const text = prompt[this.selectedLanguage] || prompt['en'];
         this.speak(text);
-        this.idleTimer = setTimeout(() => this.transitionTo(SCENES.EXIT), 60000);
+        this.idleTimer = setTimeout(() => this.transitionTo(SCENES.EXIT, { isTimeout: true }), 60000);
       }, 5000);
     }
   }

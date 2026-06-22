@@ -299,10 +299,10 @@ class CinemaKiosk {
     this.showScreen('mobile-number');
   }
 
-  onExit() {
+  onExit(isTimeout = false) {
     this.clearInactivityTimer();
     this.clearPaymentSimulation();
-    this.sceneManager.transitionTo(SCENES.EXIT);
+    this.sceneManager.transitionTo(SCENES.EXIT, { isTimeout });
     this.resetState();
     setTimeout(() => {
       this.showScreen('idle');
@@ -1100,7 +1100,7 @@ class CinemaKiosk {
     this.inactivityTimer = setTimeout(() => {
       console.log("[Kiosk] Inactivity timeout reached. Resetting to idle.");
       this.showToast("⚠️ Kiosk reset due to inactivity", "warning");
-      this.onExit();
+      this.onExit(true);
     }, 60000); // 60 seconds (1 minute)
   }
 

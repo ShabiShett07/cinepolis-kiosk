@@ -180,6 +180,7 @@ body {
 #cira-character.pose-pointing-right .pose-img-pointing_right { display: block; }
 #cira-character.pose-thinking .pose-img-thinking { display: block; }
 #cira-character.pose-celebrate .pose-img-celebrate { display: block; }
+#cira-character.pose-disappoint .pose-img-disappoint { display: block; }
 
 #cira-character.pose-idle .cira-img { animation: breathe 4s ease-in-out infinite; }
 #cira-character.pose-thinking .cira-img { animation: breathe 4s ease-in-out infinite; }
@@ -187,6 +188,7 @@ body {
 #cira-character.pose-pointing .cira-img { animation: none; }
 #cira-character.pose-pointing-right .cira-img { animation: none; }
 #cira-character.pose-celebrate .cira-img { animation: none; }
+#cira-character.pose-disappoint .cira-img { animation: breathe 4s ease-in-out infinite; }
 
 .cira-transition {
   animation: none !important;
