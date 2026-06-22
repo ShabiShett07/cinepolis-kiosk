@@ -728,19 +728,12 @@
         <div class="kiosk-bezel">
           <div class="kiosk-camera"></div>
           <div class="kiosk-speaker"></div>
-          <div class="kiosk-screen">
+          <div class="kiosk-screen" id="kiosk-screen">
             <div class="kiosk-placeholder" id="kiosk-placeholder">
-              <span>NO ACTIVE PLAYBACK</span>
-              <span style="opacity: 0.6; font-size: 9px; margin-top: 4px;">Click ▶ Play on a campaign below to preview it on the portrait screen simulator</span>
+              <span style="font-size:10px; font-weight:700;">NO ACTIVE PLAYBACK</span>
+              <span style="opacity: 0.6; font-size: 8px; margin-top: 6px; line-height:1.4; text-align:center;">Click ▶ Preview on a campaign row below to see it playing here</span>
             </div>
-            <video id="kiosk-video" class="kiosk-video" autoplay muted loop playsinline style="display:none;"></video>
-            <div class="kiosk-overlay" id="kiosk-overlay" style="display:none;">
-              <div class="kiosk-overlay-title" id="overlay-title">Cinepolis Cinema</div>
-              <div class="kiosk-overlay-sub" id="overlay-duration">15s Loop</div>
-              <div class="kiosk-overlay-prompt">
-                <div class="kiosk-overlay-finger">👆</div>
-              </div>
-            </div>
+            <!-- Video injected dynamically by JS -->
           </div>
         </div>
       </div>
@@ -911,46 +904,76 @@
     }
 
     function previewClipInSimulator(ad) {
-      const video = document.getElementById('kiosk-video');
-      const placeholder = document.getElementById('kiosk-placeholder');
-      const overlay = document.getElementById('kiosk-overlay');
-      const overlayTitle = document.getElementById('overlay-title');
-      const overlayDuration = document.getElementById('overlay-duration');
+      const screen = document.getElementById('kiosk-screen');
+      if (!screen) return;
 
-      placeholder.style.display = 'none';
-      video.style.display = 'block';
-      overlay.style.display = 'flex';
-
-      // Set aspect ratio fitting mode
       const fit = ad.aspectRatio || 'cover';
-      video.style.objectFit = fit;
-
-      // Set titles
-      overlayTitle.textContent = ad.title;
-      overlayDuration.textContent = ad.duration + ' Loop';
-
-      video.src = ad.videoUrl;
-      
-      // Control volume preview safely
       const vol = ad.volume || 'muted';
-      if (vol === 'muted') {
-        video.muted = true;
-        video.volume = 0;
-      } else {
-        video.muted = false;
-        if (vol === 'low') video.volume = 0.15;
-        else if (vol === 'medium') video.volume = 0.40;
-        else if (vol === 'high') video.volume = 0.80;
-      }
 
-      video.load();
-      video.play().catch(e => {
-        console.warn("Simulator autoplay blocked, playing muted", e);
-        video.muted = true;
-        video.play().catch(err => console.error("Simulator failed to play entirely", err));
+      // Show loading state
+      screen.innerHTML = `
+        <div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <div style="width:24px;height:24px;border:2px solid rgba(245,166,35,0.3);border-top-color:#F5A623;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <span style="color:#94A3B8;font-size:8px;font-family:monospace;">LOADING STREAM...</span>
+        </div>
+      `;
+
+      // Inject a fresh video element to avoid stale src/load state
+      const video = document.createElement('video');
+      video.muted = true; // always start muted for autoplay compliance
+      video.loop = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${fit};display:block;opacity:0;transition:opacity 0.5s ease;`;
+      video.crossOrigin = 'anonymous';
+      video.src = ad.videoUrl;
+
+      // Overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:20px;background:linear-gradient(to top, rgba(30,10,60,0.9) 0%, rgba(30,10,60,0) 60%);pointer-events:none;z-index:5;`;
+      overlay.innerHTML = `
+        <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:#FFFFFF;text-align:center;margin-bottom:2px;">${ad.title}</div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.7);margin-bottom:10px;">${ad.duration} Loop</div>
+        <div style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(245,166,35,0.6);display:flex;align-items:center;justify-content:center;background:rgba(245,166,35,0.1);font-size:9px;">👆</div>
+      `;
+
+      video.addEventListener('loadeddata', () => {
+        // Clear loading spinner and inject real video + overlay
+        screen.innerHTML = '';
+        screen.appendChild(video);
+        screen.appendChild(overlay);
+
+        // Apply volume settings after autoplay completes
+        video.play().then(() => {
+          video.style.opacity = '1';
+          if (vol !== 'muted') {
+            video.muted = false;
+            if (vol === 'low') video.volume = 0.15;
+            else if (vol === 'medium') video.volume = 0.40;
+            else if (vol === 'high') video.volume = 0.80;
+          }
+        }).catch(() => {
+          // Fallback: keep muted, still show video
+          video.muted = true;
+          video.play().catch(() => {});
+          video.style.opacity = '1';
+        });
       });
 
-      appendLog(`[PREVIEW] Loading trailer "${ad.title}" into simulator (Fit: ${fit}, Audio: ${vol}).`);
+      video.addEventListener('error', () => {
+        screen.innerHTML = `
+          <div style="position:absolute;inset:0;background:#0D0D14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;">
+            <span style="color:#EF4444;font-size:10px;font-weight:700;">VIDEO LOAD ERROR</span>
+            <span style="color:#64748B;font-size:8px;text-align:center;">Check CORS or network. URL may be blocked.</span>
+          </div>
+        `;
+        appendLog(`[ERROR] Simulator failed to load: "${ad.title}". Check network/CORS policy.`);
+      });
+
+      // Trigger load
+      video.load();
+
+      appendLog(`[PREVIEW] Streaming "${ad.title}" into vertical simulator (Fit: ${fit}, Audio: ${vol}).`);
     }
 
     function toggleStatus(id) {
@@ -973,9 +996,10 @@
       });
       document.getElementById('clip-aspect').value = option;
       
-      // If a preview video is actively playing, apply changes live to the simulator
-      const video = document.getElementById('kiosk-video');
-      if (video && video.style.display !== 'none') {
+      // Apply change to currently-playing simulator video if any
+      const screen = document.getElementById('kiosk-screen');
+      const video = screen ? screen.querySelector('video') : null;
+      if (video) {
         video.style.objectFit = option;
         appendLog(`[SIMULATOR] Dynamic fit changed to ${option} (Live preview updated).`);
       }
@@ -989,9 +1013,10 @@
       });
       document.getElementById('clip-audio').value = option;
 
-      // Update simulator volume live
-      const video = document.getElementById('kiosk-video');
-      if (video && video.style.display !== 'none') {
+      // Apply change to currently-playing simulator video if any
+      const screen = document.getElementById('kiosk-screen');
+      const video = screen ? screen.querySelector('video') : null;
+      if (video) {
         if (option === 'muted') {
           video.muted = true;
           video.volume = 0;
@@ -1103,12 +1128,18 @@
       renderQueue();
       updateTelemetry();
       
-      // Reset simulator if deleted clip was playing
-      const video = document.getElementById('kiosk-video');
-      video.pause();
-      video.style.display = 'none';
-      document.getElementById('kiosk-placeholder').style.display = 'flex';
-      document.getElementById('kiosk-overlay').style.display = 'none';
+      // Reset simulator by restoring placeholder
+      const screen = document.getElementById('kiosk-screen');
+      if (screen) {
+        const v = screen.querySelector('video');
+        if (v) { v.pause(); v.src = ''; }
+        screen.innerHTML = `
+          <div class="kiosk-placeholder" id="kiosk-placeholder">
+            <span style="font-size:10px; font-weight:700;">NO ACTIVE PLAYBACK</span>
+            <span style="opacity: 0.6; font-size: 8px; margin-top: 6px; line-height:1.4; text-align:center;">Click ▶ Preview on a campaign row below to see it playing here</span>
+          </div>
+        `;
+      }
 
       showToast("Campaign removed from terminal playlist");
       appendLog(`[DELETE] Campaign "${title}" deleted. Sending cache-invalidation commands to terminal nodes.`);
@@ -1118,12 +1149,18 @@
       localStorage.removeItem('cira_ads');
       loadClips();
       
-      // Reset simulator
-      const video = document.getElementById('kiosk-video');
-      video.pause();
-      video.style.display = 'none';
-      document.getElementById('kiosk-placeholder').style.display = 'flex';
-      document.getElementById('kiosk-overlay').style.display = 'none';
+      // Reset simulator by restoring placeholder
+      const screen = document.getElementById('kiosk-screen');
+      if (screen) {
+        const v = screen.querySelector('video');
+        if (v) { v.pause(); v.src = ''; }
+        screen.innerHTML = `
+          <div class="kiosk-placeholder" id="kiosk-placeholder">
+            <span style="font-size:10px; font-weight:700;">NO ACTIVE PLAYBACK</span>
+            <span style="opacity: 0.6; font-size: 8px; margin-top: 6px; line-height:1.4; text-align:center;">Click ▶ Preview on a campaign row below to see it playing here</span>
+          </div>
+        `;
+      }
 
       showToast("Console reset to default Cinepolis mock clips");
       appendLog("[SYSTEM] Executed full local cache rebuild. All kiosk nodes forced to sync default campaigns.");
