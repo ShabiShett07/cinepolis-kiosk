@@ -372,7 +372,8 @@ body {
 .movies-scroll-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px 14px;
+  grid-auto-rows: max-content;
+  gap: 24px 14px;
   overflow-y: auto;
   padding: 8px 14px 24px;
   scrollbar-width: none;
@@ -396,6 +397,7 @@ body {
 .movie-card:active { transform: scale(0.98); }
 
 .movie-poster-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
   border-radius: var(--radius-md);
@@ -405,6 +407,9 @@ body {
 }
 
 .movie-poster {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

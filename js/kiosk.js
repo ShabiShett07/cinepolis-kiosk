@@ -773,7 +773,7 @@ class CinemaKiosk {
             <!-- Rendered dynamically by selectPayment -->
           </div>
           <div id="cira-payment-character" style="margin-top:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
-            <img src="assets/cira/cira_pointing_up.png" style="height:170px; width:auto; object-fit:contain; animation: breathe 4s ease-in-out infinite; display:block;" alt="Cira Pointing Up">
+            <img src="assets/cira/cira_pointing_up.webp" style="height:170px; width:auto; object-fit:contain; animation: breathe 4s ease-in-out infinite; display:block;" alt="Cira Pointing Up">
           </div>
           <div style="margin-top:16px;">
             <button class="btn btn-ghost btn-xl" onclick="window.kiosk.handlePaymentBack()">← Back</button>

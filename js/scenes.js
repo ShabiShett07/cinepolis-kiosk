@@ -217,17 +217,17 @@ class CiraSceneManager {
     const img = ciraEl.querySelector('img.cira-img');
     if (img) {
       if (pose === 'namaste') {
-        img.src = 'assets/cira/cira_namaste.png';
+        img.src = 'assets/cira/cira_namaste.webp';
       } else if (pose === 'pointing') {
-        img.src = 'assets/cira/cira_pointing.png';
+        img.src = 'assets/cira/cira_pointing.webp';
       } else if (pose === 'pointing_right') {
-        img.src = 'assets/cira/cira_pointing_right.png';
+        img.src = 'assets/cira/cira_pointing_right.webp';
       } else if (pose === 'thinking') {
-        img.src = 'assets/cira/cira_thinking.png';
+        img.src = 'assets/cira/cira_thinking.webp';
       } else if (pose === 'celebrate') {
-        img.src = 'assets/cira/cira_celebrate.png';
+        img.src = 'assets/cira/cira_celebrate.webp';
       } else {
-        img.src = 'assets/cira/cira_idle.png';
+        img.src = 'assets/cira/cira_idle.webp';
       }
     }
 

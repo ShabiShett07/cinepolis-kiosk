@@ -33,7 +33,7 @@ MOVIES = [
         "synopsis": "When a rogue AI threatens to plunge the world into permanent darkness...",
         "cast": ["Alex Mercer", "Priya Nair", "Daniel Cross"],
         "director": "Marcus Stone",
-        "poster": "assets/movies/eclipse_protocol.png",
+        "poster": "assets/movies/eclipse_protocol.webp",
         "format": ["IMAX", "2D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
@@ -49,7 +49,7 @@ MOVIES = [
         "synopsis": "Anjali returns to Mumbai after five years abroad...",
         "cast": ["Rahul Khan", "Anjali Sharma"],
         "director": "Vikram Kapoor",
-        "poster": "assets/movies/dhadkan_se_door.png",
+        "poster": "assets/movies/dhadkan_se_door.webp",
         "format": ["2D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
@@ -65,7 +65,7 @@ MOVIES = [
         "synopsis": "Commander Elara Vance is the last survivor of humanity's most ambitious deep-space mission.",
         "cast": ["Elara Vance", "Kairo Shaw"],
         "director": "Kairo Shaw",
-        "poster": "assets/movies/star_nomad.png",
+        "poster": "assets/movies/star_nomad.webp",
         "format": ["IMAX", "3D", "2D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
@@ -81,7 +81,7 @@ MOVIES = [
         "synopsis": "When 10-year-old Meera discovers a magical golden lantern...",
         "cast": ["Meera (voice)", "Prince Arjun (voice)"],
         "director": "Ashish Sharma",
-        "poster": "assets/movies/golden_lantern.png",
+        "poster": "assets/movies/golden_lantern.webp",
         "format": ["2D", "3D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
@@ -97,7 +97,7 @@ MOVIES = [
         "synopsis": "Journalist Evelyn Reed investigates the disappearance of five children...",
         "cast": ["Evelyn Reed", "Maxwell Cole"],
         "director": "Elias Thorne",
-        "poster": "assets/movies/whisper_in_the_dark.png",
+        "poster": "assets/movies/whisper_in_the_dark.webp",
         "format": ["2D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
@@ -113,7 +113,7 @@ MOVIES = [
         "synopsis": "When the ancient seal binding the demon lord Kaal is broken...",
         "cast": ["Arjun Deva", "Mira Rao"],
         "director": "Anand Kumar",
-        "poster": "assets/movies/kaal_warrior.png",
+        "poster": "assets/movies/kaal_warrior.webp",
         "format": ["IMAX", "4DX", "2D"],
         "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"

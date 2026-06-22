@@ -10,6 +10,14 @@
   <meta name="robots" content="noindex">
   <link rel="stylesheet" href="css/design-system.css?v=1.1">
   <link rel="stylesheet" href="css/kiosk.css?v=1.1">
+  <!-- Preload CIRA Poses for Instant Screen Transitions on Vercel -->
+  <link rel="preload" as="image" href="assets/cira/cira_namaste.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_idle.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_pointing.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_pointing_right.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_pointing_up.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_thinking.webp">
+  <link rel="preload" as="image" href="assets/cira/cira_celebrate.webp">
 </head>
 
 <body>
@@ -41,7 +49,7 @@
 
     <!-- ====== CIRA CHARACTER ====== -->
     <div id="cira-character" class="cira-hidden">
-      <img class="cira-img" src="assets/cira/cira_idle.png" alt="CIRA - Your Cinema Assistant">
+      <img class="cira-img" src="assets/cira/cira_idle.webp" alt="CIRA - Your Cinema Assistant">
     </div>
 
     <!-- ====== CIRA SPEECH BUBBLE ====== -->

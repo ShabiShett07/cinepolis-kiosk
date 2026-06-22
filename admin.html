@@ -176,12 +176,12 @@
       weekDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       occupancy: { imax: 87, fourDX: 72, premium: 91, regular: 64 },
       movies: [
-        { id: 'm001', title: 'Eclipse Protocol', genre: 'Action/Sci-Fi', status: 'Now Showing', bookings: 342, revenue: 240750, rating: 8.2, poster: 'assets/movies/eclipse_protocol.png' },
-        { id: 'm002', title: 'Dhadkan Se Door', genre: 'Romance', status: 'Now Showing', bookings: 218, revenue: 126440, rating: 7.8, poster: 'assets/movies/dhadkan_se_door.png' },
-        { id: 'm003', title: 'Star Nomad', genre: 'Sci-Fi', status: 'Now Showing', bookings: 401, revenue: 320800, rating: 8.6, poster: 'assets/movies/star_nomad.png' },
-        { id: 'm004', title: 'The Golden Lantern', genre: 'Animation', status: 'Now Showing', bookings: 289, revenue: 147450, rating: 8.9, poster: 'assets/movies/golden_lantern.png' },
-        { id: 'm005', title: 'Whisper in the Dark', genre: 'Horror', status: 'Now Showing', bookings: 156, revenue: 94500, rating: 7.4, poster: 'assets/movies/whisper_in_the_dark.png' },
-        { id: 'm006', title: 'Kaal Warrior', genre: 'Action/Fantasy', status: 'Now Showing', bookings: 387, revenue: 328950, rating: 8.4, poster: 'assets/movies/kaal_warrior.png' }
+        { id: 'm001', title: 'Eclipse Protocol', genre: 'Action/Sci-Fi', status: 'Now Showing', bookings: 342, revenue: 240750, rating: 8.2, poster: 'assets/movies/eclipse_protocol.webp' },
+        { id: 'm002', title: 'Dhadkan Se Door', genre: 'Romance', status: 'Now Showing', bookings: 218, revenue: 126440, rating: 7.8, poster: 'assets/movies/dhadkan_se_door.webp' },
+        { id: 'm003', title: 'Star Nomad', genre: 'Sci-Fi', status: 'Now Showing', bookings: 401, revenue: 320800, rating: 8.6, poster: 'assets/movies/star_nomad.webp' },
+        { id: 'm004', title: 'The Golden Lantern', genre: 'Animation', status: 'Now Showing', bookings: 289, revenue: 147450, rating: 8.9, poster: 'assets/movies/golden_lantern.webp' },
+        { id: 'm005', title: 'Whisper in the Dark', genre: 'Horror', status: 'Now Showing', bookings: 156, revenue: 94500, rating: 7.4, poster: 'assets/movies/whisper_in_the_dark.webp' },
+        { id: 'm006', title: 'Kaal Warrior', genre: 'Action/Fantasy', status: 'Now Showing', bookings: 387, revenue: 328950, rating: 8.4, poster: 'assets/movies/kaal_warrior.webp' }
       ],
       kiosks: [
         { id: 'K001', name: 'Entrance Hall - Kiosk 1', status: 'online', transactions: 84, uptime: '99.8%', lastSeen: 'Just now', location: 'Ground Floor' },
@@ -537,7 +537,7 @@
         <div class="chart-card" style="margin-bottom:20px;">
           <div class="chart-title" style="margin-bottom:16px;">🎭 Character Preview</div>
           <div style="text-align:center;background:linear-gradient(135deg,#1E0A3C,#0A0610);border-radius:12px;padding:20px;">
-            <img src="assets/cira/cira_idle.png" style="max-height:560px;object-fit:contain;" alt="Cira">
+            <img src="assets/cira/cira_idle.webp" style="max-height:560px;object-fit:contain;" alt="Cira">
             <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:18px;margin-top:12px;">CIRA</div>
             <div style="font-size:12px;color:var(--text-3);">Cinema AI Retail Assistant</div>
           </div>
@@ -930,7 +930,7 @@
     function previewPose(pose) {
       const img = document.querySelector('.chart-card img');
       if (!img) return;
-      const poses = { idle: 'assets/cira/cira_idle.png', namaste: 'assets/cira/cira_namaste.png', pointing: 'assets/cira/cira_pointing.png', celebrate: 'assets/cira/cira_celebrate.png' };
+      const poses = { idle: 'assets/cira/cira_idle.webp', namaste: 'assets/cira/cira_namaste.webp', pointing: 'assets/cira/cira_pointing.webp', celebrate: 'assets/cira/cira_celebrate.webp' };
       img.style.opacity = '0';
       setTimeout(() => { img.src = poses[pose] || poses.idle; img.style.opacity = '1'; img.style.transition = 'opacity 0.3s'; }, 200);
     }
