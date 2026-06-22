@@ -18,6 +18,8 @@ class CinemaKiosk {
     };
     this.adInterval = null;
     this.currentAdIndex = 0;
+    this.inactivityTimer = null;
+    this.paymentSimulationTimers = [];
     this.init();
   }
 
@@ -116,6 +118,7 @@ class CinemaKiosk {
       container.style.opacity = '0';
     }
     this.sceneManager.transitionTo(SCENES.USER_DETECTED);
+    this.resetInactivityTimer();
     setTimeout(() => {
       this.sceneManager.transitionTo(SCENES.NAMASTE_GREETING, null, () => {
         this.showScreen('language');
@@ -156,21 +159,11 @@ class CinemaKiosk {
   }
 
   onSeatsConfirmed() {
-    this.sceneManager.transitionTo(SCENES.MOBILE_NUMBER);
-    this.showScreen('mobile-number');
-  }
-
-  onMobileSubmitted() {
-    this.sceneManager.transitionTo(SCENES.FOOD_BEVERAGES);
-    this.showScreen('food-beverages');
-  }
-
-  onFnBDone() {
     this.sceneManager.transitionTo(SCENES.PAYMENT);
     this.showScreen('payment');
   }
 
-  onPaymentComplete() {
+  onMobileSubmitted() {
     const payload = {
       movie: this.state.selectedMovie?.title,
       showtime: this.state.selectedShowtime?.time,
@@ -189,16 +182,31 @@ class CinemaKiosk {
     });
   }
 
+  onFnBDone() {
+    this.sceneManager.transitionTo(SCENES.PAYMENT);
+    this.showScreen('payment');
+  }
+
+  onPaymentComplete() {
+    this.clearPaymentSimulation();
+    this.sceneManager.transitionTo(SCENES.MOBILE_NUMBER);
+    this.showScreen('mobile-number');
+  }
+
   onExit() {
+    this.clearInactivityTimer();
+    this.clearPaymentSimulation();
     this.sceneManager.transitionTo(SCENES.EXIT);
     this.resetState();
     setTimeout(() => {
       this.showScreen('idle');
       this.startIdleAds();
+      this.sceneManager.transitionTo(SCENES.IDLE);
     }, 3000);
   }
 
   resetState() {
+    this.clearPaymentSimulation();
     this.state = {
       selectedMovie: null, selectedShowtime: null, ticketCount: 1,
       selectedSeats: [], mobileNumber: '', fnbOrder: [],
@@ -207,13 +215,22 @@ class CinemaKiosk {
     this.updateOrderBar(false);
   }
 
+  clearPaymentSimulation() {
+    if (this.paymentSimulationTimers && this.paymentSimulationTimers.length > 0) {
+      this.paymentSimulationTimers.forEach(timer => clearTimeout(timer));
+      this.paymentSimulationTimers = [];
+    }
+  }
+
+  handlePaymentBack() {
+    this.clearPaymentSimulation();
+    this.showScreen('seat-selection');
+    this.sceneManager.transitionTo(SCENES.SEAT_SELECTION);
+  }
+
   calculateTotal() {
     if (!this.state.selectedMovie || !this.state.selectedShowtime) return 0;
-    const movie = this.state.selectedMovie;
-    const screen = this.state.selectedShowtime.screen;
-    let pricePerTicket = movie.price.regular;
-    if (screen.includes('IMAX') && movie.price.imax) pricePerTicket = movie.price.imax;
-    else if (screen.includes('Premium')) pricePerTicket = movie.price.premium;
+    const pricePerTicket = 50;
     const ticketTotal = pricePerTicket * this.state.ticketCount;
     const fnbTotal = this.state.fnbOrder.reduce((sum, item) => sum + item.price * item.qty, 0);
     return ticketTotal + fnbTotal;
@@ -626,7 +643,7 @@ class CinemaKiosk {
           </div>
         </div>
         <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;">
-          <button class="btn btn-ghost btn-xl" onclick="window.kiosk.showScreen('seat-selection')">← Back</button>
+          <button class="btn btn-ghost btn-xl" onclick="window.kiosk.showScreen('payment'); window.kiosk.sceneManager.transitionTo(window.SCENES.PAYMENT);">← Back</button>
           <button class="btn btn-primary btn-xl" id="btn-submit-mobile" onclick="window.kiosk.onMobileSubmitted()" disabled>Continue →</button>
         </div>
       </div>
@@ -738,43 +755,104 @@ class CinemaKiosk {
               <div style="display:flex;justify-content:space-between;font-family:'Outfit',sans-serif;font-size:var(--text-md);font-weight:800;"><span>Total</span><span style="color:var(--accent);">₹${total}</span></div>
             </div>
           </div>
-          <div class="payment-methods">
-            <div class="payment-method-card" id="pm-upi" onclick="window.kiosk.selectPayment('upi')">
-              <span class="payment-icon">📱</span>
-              <div class="payment-label">UPI</div>
-              <div class="payment-sub">GPay, PhonePe, Paytm</div>
+          <div class="payment-methods" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="payment-method-card" id="pm-qr" onclick="window.kiosk.selectPayment('qr')">
+              <span class="payment-icon">🔳</span>
+              <div class="payment-label">QR Code</div>
+              <div class="payment-sub">Scan and Pay</div>
             </div>
             <div class="payment-method-card" id="pm-card" onclick="window.kiosk.selectPayment('card')">
               <span class="payment-icon">💳</span>
               <div class="payment-label">Card</div>
               <div class="payment-sub">Debit / Credit</div>
             </div>
-            <div class="payment-method-card" id="pm-cash" onclick="window.kiosk.selectPayment('cash')">
-              <span class="payment-icon">💵</span>
-              <div class="payment-label">Cash</div>
-              <div class="payment-sub">Pay at counter</div>
-            </div>
           </div>
         </div>
-        <div id="payment-right" style="text-align:center;">
-          <div style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:8px;">Scan to pay with any UPI app</div>
-          <div class="qr-code-box" style="max-width:180px;margin:0 auto 12px;padding:8px;">
-            <div class="qr-placeholder" style="width:140px;height:140px;"></div>
+        <div id="payment-right" style="text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <div id="payment-right-content" style="min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <!-- Rendered dynamically by selectPayment -->
           </div>
-          <div style="display:flex;gap:12px;justify-content:center;align-items:center;">
-            <button class="btn btn-ghost btn-xl" onclick="window.kiosk.showScreen('food-beverages')">← Back</button>
-            <button class="btn btn-primary btn-xl" id="btn-pay-now" onclick="window.kiosk.onPaymentComplete()" style="flex:1;">✓ Confirm Payment ₹${total}</button>
+          <div id="cira-payment-character" style="margin-top:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+            <img src="assets/cira/cira_pointing_up.png" style="height:170px; width:auto; object-fit:contain; animation: breathe 4s ease-in-out infinite; display:block;" alt="Cira Pointing Up">
+          </div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-ghost btn-xl" onclick="window.kiosk.handlePaymentBack()">← Back</button>
           </div>
         </div>
       </div>
     `;
+
+    setTimeout(() => {
+      this.selectPayment('qr');
+    }, 50);
   }
 
   selectPayment(method) {
+    this.clearPaymentSimulation();
     this.state.selectedPayment = method;
     document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
     const card = document.getElementById(`pm-${method}`);
     if (card) card.classList.add('selected');
+
+    const rightPanel = document.getElementById('payment-right-content');
+    if (rightPanel) {
+      if (method === 'qr') {
+        rightPanel.innerHTML = `
+          <div style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:8px;">Scan to pay with any UPI app</div>
+          <div class="qr-code-box" style="max-width:180px;margin:0 auto 12px;padding:8px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+            <img src="assets/qr_code.png" style="width:140px;height:140px;display:block;" alt="Scan to pay">
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary);font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;">
+            <div class="skeleton" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite;"></div>
+            <span>Waiting for payment...</span>
+          </div>
+        `;
+      } else if (method === 'card') {
+        rightPanel.innerHTML = `
+          <div style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:12px;">Insert, swipe, or tap card on the terminal</div>
+          <div style="font-size:72px;margin:16px 0;">💳</div>
+          <div style="font-size:14px;color:var(--text-secondary);font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;">
+            <div class="skeleton" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite;"></div>
+            <span>Waiting for card insertion...</span>
+          </div>
+        `;
+      }
+    }
+
+    const t1 = setTimeout(() => {
+      if (rightPanel) {
+        rightPanel.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:180px;">
+            <div class="skeleton" style="width:40px;height:40px;border-radius:50%;border:4px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite;"></div>
+            <div style="font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">
+              ${method === 'qr' ? 'Checking QR payment status...' : 'Processing Card transaction...'}
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);">Please wait, contacting payment gateway</div>
+          </div>
+        `;
+      }
+
+      const t2 = setTimeout(() => {
+        if (rightPanel) {
+          rightPanel.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:180px;">
+              <div style="width:60px;height:60px;border-radius:50%;background:rgba(0,212,170,0.15);border:3px solid var(--success);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--success);box-shadow:0 0 20px rgba(0,212,170,0.2);">✓</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:var(--success);">
+                ${method === 'qr' ? 'QR Payment Verified!' : 'Card Payment Approved!'}
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);">Redirecting to confirmation...</div>
+            </div>
+          `;
+        }
+
+        const t3 = setTimeout(() => {
+          this.onPaymentComplete();
+        }, 1500);
+        this.paymentSimulationTimers.push(t3);
+      }, 3000);
+      this.paymentSimulationTimers.push(t2);
+    }, 4000);
+    this.paymentSimulationTimers.push(t1);
   }
 
   renderSuccess() {
@@ -842,6 +920,16 @@ class CinemaKiosk {
   }
 
   setupEventListeners() {
+    // Global user interaction listener to reset inactivity timer
+    const resetTimer = () => {
+      if (this.sceneManager.currentScene !== SCENES.IDLE) {
+        this.resetInactivityTimer();
+      }
+    };
+    document.addEventListener('pointerdown', resetTimer);
+    document.addEventListener('keypress', resetTimer);
+    document.addEventListener('click', resetTimer);
+
     // Global touch anywhere on idle screen
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -850,6 +938,25 @@ class CinemaKiosk {
         }
       }
     });
+  }
+
+  resetInactivityTimer() {
+    this.clearInactivityTimer();
+    const autoReset = localStorage.getItem('cira_auto_reset') !== 'false';
+    if (!autoReset) return;
+
+    this.inactivityTimer = setTimeout(() => {
+      console.log("[Kiosk] Inactivity timeout reached. Resetting to idle.");
+      this.showToast("⚠️ Kiosk reset due to inactivity", "warning");
+      this.onExit();
+    }, 60000); // 60 seconds (1 minute)
+  }
+
+  clearInactivityTimer() {
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+      this.inactivityTimer = null;
+    }
   }
 }
 

@@ -35,7 +35,7 @@ MOVIES = [
         "director": "Marcus Stone",
         "poster": "assets/movies/eclipse_protocol.png",
         "format": ["IMAX", "2D"],
-        "price": {"regular": 350, "premium": 550, "imax": 750},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     },
     {
@@ -51,7 +51,7 @@ MOVIES = [
         "director": "Vikram Kapoor",
         "poster": "assets/movies/dhadkan_se_door.png",
         "format": ["2D"],
-        "price": {"regular": 280, "premium": 420, "imax": None},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     },
     {
@@ -67,7 +67,7 @@ MOVIES = [
         "director": "Kairo Shaw",
         "poster": "assets/movies/star_nomad.png",
         "format": ["IMAX", "3D", "2D"],
-        "price": {"regular": 380, "premium": 580, "imax": 800},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     },
     {
@@ -83,7 +83,7 @@ MOVIES = [
         "director": "Ashish Sharma",
         "poster": "assets/movies/golden_lantern.png",
         "format": ["2D", "3D"],
-        "price": {"regular": 250, "premium": 380, "imax": None},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     },
     {
@@ -99,7 +99,7 @@ MOVIES = [
         "director": "Elias Thorne",
         "poster": "assets/movies/whisper_in_the_dark.png",
         "format": ["2D"],
-        "price": {"regular": 300, "premium": 450, "imax": None},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     },
     {
@@ -115,7 +115,7 @@ MOVIES = [
         "director": "Anand Kumar",
         "poster": "assets/movies/kaal_warrior.png",
         "format": ["IMAX", "4DX", "2D"],
-        "price": {"regular": 380, "premium": 580, "imax": 850},
+        "price": {"regular": 50, "premium": 50, "imax": 50},
         "status": "NOW_SHOWING"
     }
 ]

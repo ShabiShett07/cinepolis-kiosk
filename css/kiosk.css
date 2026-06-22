@@ -141,8 +141,8 @@ body {
               left 1s cubic-bezier(0.34, 1.56, 0.64, 1),
               transform 1s cubic-bezier(0.34, 1.56, 0.64, 1),
               opacity 0.6s ease;
-  bottom: 80px;
-  left: 12px;
+  bottom: 20px;
+  left: 20px;
   transform: scale(1);
   opacity: 1;
 }
@@ -154,22 +154,29 @@ body {
 }
 
 #cira-character.cira-centered {
-  bottom: calc(50% - 90px);
-  left: calc(50% - 60px);
-  transform: scale(1.8);
+  bottom: calc(50% - 100px);
+  left: calc(50% - 67px);
+  transform: scale(2.0);
   opacity: 1;
 }
 
+#cira-character.cira-right {
+  left: auto;
+  right: 20px;
+}
+
 #cira-character .cira-img {
-  height: 180px;
+  height: 200px;
   width: auto;
   object-fit: contain;
   display: block;
 }
 
 #cira-character.pose-idle .cira-img { animation: breathe 4s ease-in-out infinite; }
-#cira-character.pose-namaste .cira-img { animation: breathe 3s ease-in-out 2; }
+#cira-character.pose-thinking .cira-img { animation: breathe 4s ease-in-out infinite; }
+#cira-character.pose-namaste .cira-img { animation: breathe 1.6s ease-in-out 1; }
 #cira-character.pose-pointing .cira-img { animation: none; }
+#cira-character.pose-pointing-right .cira-img { animation: none; }
 #cira-character.pose-celebrate .cira-img { animation: none; }
 
 .cira-transition {

@@ -26,7 +26,7 @@ const MOCK_DATA = {
       poster: "assets/movies/eclipse_protocol.png",
       trailer: null,
       format: ["IMAX", "2D"],
-      price: { regular: 350, premium: 550, imax: 750 },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s001a", screen: "Screen 1 (IMAX)", time: "10:30 AM", date: "Today", available: 87, total: 150 },
         { id: "s001b", screen: "Screen 3 (Premium)", time: "2:00 PM", date: "Today", available: 43, total: 80 },
@@ -49,7 +49,7 @@ const MOCK_DATA = {
       poster: "assets/movies/dhadkan_se_door.png",
       trailer: null,
       format: ["2D"],
-      price: { regular: 280, premium: 420, imax: null },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s002a", screen: "Screen 2 (4DX)", time: "11:15 AM", date: "Today", available: 55, total: 100 },
         { id: "s002b", screen: "Screen 4", time: "3:30 PM", date: "Today", available: 88, total: 120 },
@@ -71,7 +71,7 @@ const MOCK_DATA = {
       poster: "assets/movies/star_nomad.png",
       trailer: null,
       format: ["IMAX", "3D", "2D"],
-      price: { regular: 380, premium: 580, imax: 800 },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s003a", screen: "Screen 1 (IMAX)", time: "9:00 AM", date: "Today", available: 120, total: 150 },
         { id: "s003b", screen: "Screen 2 (4DX)", time: "12:30 PM", date: "Today", available: 45, total: 100 },
@@ -93,7 +93,7 @@ const MOCK_DATA = {
       poster: "assets/movies/golden_lantern.png",
       trailer: null,
       format: ["2D", "3D"],
-      price: { regular: 250, premium: 380, imax: null },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s004a", screen: "Screen 3 (Premium)", time: "10:00 AM", date: "Today", available: 14, total: 80 },
         { id: "s004b", screen: "Screen 5", time: "1:00 PM", date: "Today", available: 67, total: 120 },
@@ -115,7 +115,7 @@ const MOCK_DATA = {
       poster: "assets/movies/whisper_in_the_dark.png",
       trailer: null,
       format: ["2D"],
-      price: { regular: 300, premium: 450, imax: null },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s005a", screen: "Screen 4", time: "9:15 PM", date: "Today", available: 54, total: 120 },
         { id: "s005b", screen: "Screen 5", time: "11:30 PM", date: "Today", available: 89, total: 120 },
@@ -136,7 +136,7 @@ const MOCK_DATA = {
       poster: "assets/movies/kaal_warrior.png",
       trailer: null,
       format: ["IMAX", "4DX", "2D"],
-      price: { regular: 380, premium: 580, imax: 850 },
+      price: { regular: 50, premium: 50, imax: 50 },
       showtimes: [
         { id: "s006a", screen: "Screen 1 (IMAX)", time: "12:00 PM", date: "Today", available: 67, total: 150 },
         { id: "s006b", screen: "Screen 2 (4DX)", time: "3:00 PM", date: "Today", available: 29, total: 100 },

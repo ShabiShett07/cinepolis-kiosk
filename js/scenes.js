@@ -25,13 +25,13 @@ const CIRA_POSES = {
   [SCENES.NAMASTE_GREETING]: 'namaste',
   [SCENES.LANGUAGE_SELECTION]: 'pointing',
   [SCENES.MOVIE_BROWSING]: 'idle',
-  [SCENES.MOVIE_DETAILS]: 'pointing',
+  [SCENES.MOVIE_DETAILS]: 'pointing_right',
   [SCENES.SHOWTIME_SELECTION]: 'pointing',
-  [SCENES.TICKET_COUNT]: 'idle',
+  [SCENES.TICKET_COUNT]: 'thinking',
   [SCENES.SEAT_SELECTION]: 'pointing',
   [SCENES.MOBILE_NUMBER]: 'idle',
   [SCENES.FOOD_BEVERAGES]: 'idle',
-  [SCENES.PAYMENT]: 'idle',
+  [SCENES.PAYMENT]: null,
   [SCENES.SUCCESS]: 'celebrate',
   [SCENES.EXIT]: 'celebrate'
 };
@@ -101,6 +101,20 @@ class CiraSceneManager {
   }
 
   speak(text, onEnd, scene = null) {
+    const enableVoice = localStorage.getItem('cira_enable_voice') !== 'false';
+    
+    // If voice is disabled, skip audio playback but handle transition timings gracefully
+    if (!enableVoice) {
+      if (scene === SCENES.NAMASTE_GREETING) {
+        setTimeout(() => {
+          onEnd && onEnd();
+        }, 1600); // 1.6s matches greeting.mp3 duration
+      } else {
+        onEnd && onEnd();
+      }
+      return;
+    }
+
     // If pre-recorded audio is mapped for this scene
     if (scene && SCENE_AUDIO_FILES[scene]) {
       let audioUrl = SCENE_AUDIO_FILES[scene];
@@ -133,11 +147,23 @@ class CiraSceneManager {
       };
       audio.onerror = (e) => {
         console.warn(`[CIRA Audio] Failed to play pre-recorded audio for scene ${scene}:`, e);
-        onEnd && onEnd();
+        if (scene === SCENES.NAMASTE_GREETING) {
+          setTimeout(() => {
+            onEnd && onEnd();
+          }, 1600); // 1.6s matches greeting.mp3 duration
+        } else {
+          onEnd && onEnd();
+        }
       };
       audio.play().catch(e => {
         console.warn(`[CIRA Audio] Play blocked for scene ${scene}:`, e);
-        onEnd && onEnd();
+        if (scene === SCENES.NAMASTE_GREETING) {
+          setTimeout(() => {
+            onEnd && onEnd();
+          }, 1600); // 1.6s matches greeting.mp3 duration
+        } else {
+          onEnd && onEnd();
+        }
       });
     } else {
       onEnd && onEnd();
@@ -168,12 +194,18 @@ class CiraSceneManager {
     const pose = CIRA_POSES[scene];
 
     // Remove all pose classes
-    ciraEl.classList.remove('pose-idle', 'pose-namaste', 'pose-pointing', 'pose-celebrate', 'cira-hidden');
+    ciraEl.classList.remove('pose-idle', 'pose-namaste', 'pose-pointing', 'pose-pointing-right', 'pose-thinking', 'pose-celebrate', 'cira-hidden');
 
     if (scene === SCENES.USER_DETECTED || scene === SCENES.NAMASTE_GREETING) {
       ciraEl.classList.add('cira-centered');
     } else {
       ciraEl.classList.remove('cira-centered');
+    }
+
+    if (scene === SCENES.MOVIE_DETAILS) {
+      ciraEl.classList.add('cira-right');
+    } else {
+      ciraEl.classList.remove('cira-right');
     }
 
     if (pose === null) {
@@ -188,6 +220,10 @@ class CiraSceneManager {
         img.src = 'assets/cira/cira_namaste.png';
       } else if (pose === 'pointing') {
         img.src = 'assets/cira/cira_pointing.png';
+      } else if (pose === 'pointing_right') {
+        img.src = 'assets/cira/cira_pointing_right.png';
+      } else if (pose === 'thinking') {
+        img.src = 'assets/cira/cira_thinking.png';
       } else if (pose === 'celebrate') {
         img.src = 'assets/cira/cira_celebrate.png';
       } else {
