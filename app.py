@@ -352,6 +352,11 @@ def serve_marketing():
     """Serve the marketing dashboard."""
     return send_from_directory('.', 'marketing.html')
 
+@app.route('/operations')
+def serve_operations():
+    """Serve the operations dashboard."""
+    return send_from_directory('.', 'operations.html')
+
 @app.route('/<path:filename>')
 def serve_static(filename):
     """Serve static assets."""
@@ -367,10 +372,11 @@ if __name__ == '__main__':
 ║       CIRA Cinema Kiosk Backend — Starting Up            ║
 ║       Vista-Compatible API Server                        ║
 ╠══════════════════════════════════════════════════════════╣
-║  Kiosk:     http://localhost:5050/                       ║
-║  Admin:     http://localhost:5050/admin                  ║
-║  Marketing: http://localhost:5050/marketing              ║
-║  API Docs:  http://localhost:5050/api/health             ║
+║  Kiosk:      http://localhost:5050/                      ║
+║  Admin:      http://localhost:5050/admin                 ║
+║  Marketing:  http://localhost:5050/marketing             ║
+║  Operations: http://localhost:5050/operations            ║
+║  API Docs:   http://localhost:5050/api/health            ║
 ╚══════════════════════════════════════════════════════════╝
     """)
     app.run(debug=True, host='0.0.0.0', port=5050)

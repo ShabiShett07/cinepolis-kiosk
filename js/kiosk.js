@@ -284,6 +284,27 @@ class CinemaKiosk {
     };
     VistaAPI.bookTickets(payload).then(res => {
       this.state.bookingId = res.data.bookingId;
+
+      // ── Persist transaction for /operations dashboard ──
+      try {
+        const txns = JSON.parse(localStorage.getItem('cira_transactions_v1') || '[]');
+        txns.unshift({
+          bookingId:   res.data.bookingId,
+          timestamp:   new Date().toISOString(),
+          movie:       payload.movie,
+          showtime:    payload.showtime,
+          screen:      payload.screen,
+          seats:       payload.seats,
+          tickets:     payload.tickets,
+          mobile:      payload.mobile,
+          fnb:         payload.fnb.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+          total:       payload.total,
+          paymentMethod: this.state.selectedPayment || 'qr',
+          status:      'confirmed'
+        });
+        localStorage.setItem('cira_transactions_v1', JSON.stringify(txns));
+      } catch(e) { console.warn('Failed to persist transaction', e); }
+
       this.sceneManager.transitionTo(SCENES.SUCCESS);
       this.showScreen('success');
       setTimeout(() => this.onExit(), 15000);

@@ -18,6 +18,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "operations.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "css/**",
       "use": "@vercel/static"
     },
@@ -42,6 +46,10 @@
     {
       "src": "/marketing",
       "dest": "marketing.html"
+    },
+    {
+      "src": "/operations",
+      "dest": "operations.html"
     },
     {
       "src": "/css/(.*)",

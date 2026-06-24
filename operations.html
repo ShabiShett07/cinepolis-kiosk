@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinepolis Operations — Transaction Management</title>
+  <meta name="description"
+    content="Cinepolis kiosk operations center — view, filter, and manage all ticket booking transactions in real-time.">
+  <link rel="stylesheet" href="css/design-system.css?v=1.4">
+  <style>
+    /* ── Override kiosk root styles for desktop dashboard ── */
+    :root {
+      --primary: #1E0A3C;
+      --primary-light: #2D1060;
+      --accent: #F5A623;
+      --accent-dark: #D4891A;
+      --bg-surface: #F0F2F7;
+      --panel-bg: #FFFFFF;
+      --border-color: rgba(30, 10, 60, 0.08);
+      --text-main: #1E0A3C;
+      --text-muted: #5E6475;
+      --success: #00C897;
+      --error: #FF4757;
+      --info: #54A0FF;
+      --warning: #F5A623;
+      --shadow-sm: 0 2px 8px rgba(30, 10, 60, 0.04);
+      --shadow-md: 0 8px 24px rgba(30, 10, 60, 0.07);
+      --shadow-lg: 0 16px 40px rgba(30, 10, 60, 0.10);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      cursor: default;
+      user-select: none;
+    }
+
+    /* ── HEADER ── */
+    .ops-header {
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+      color: var(--accent);
+      font-family: 'Outfit', sans-serif;
+      box-shadow: 0 4px 12px rgba(30, 10, 60, 0.2);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title span {
+      color: var(--accent);
+    }
+
+    .page-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border-color);
+      padding-left: 12px;
+      margin-left: 12px;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-surface);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .nav-link.active {
+      background: var(--primary);
+      color: #FFF;
+      border-color: var(--primary);
+    }
+
+    /* ── SUMMARY METRICS ── */
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      padding: 24px 32px 0;
+    }
+
+    .metric-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: box-shadow 0.2s;
+    }
+
+    .metric-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .metric-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .metric-delta {
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .metric-delta.up {
+      color: var(--success);
+    }
+
+    .metric-delta.neutral {
+      color: var(--text-muted);
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 20px 32px 0;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px 10px 36px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 100%;
+      outline: none;
+      background: var(--panel-bg);
+      color: var(--text-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: text;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.12);
+    }
+
+    .filter-select {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      background: var(--panel-bg);
+      color: var(--text-main);
+      cursor: pointer;
+      min-width: 140px;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      border-color: var(--accent);
+    }
+
+    .filter-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn.primary {
+      background: var(--primary);
+      color: #FFF;
+      box-shadow: 0 4px 12px rgba(30, 10, 60, 0.15);
+    }
+
+    .filter-btn.primary:hover {
+      background: var(--primary-light);
+    }
+
+    .filter-btn.secondary {
+      background: var(--panel-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .filter-btn.secondary:hover {
+      border-color: var(--primary);
+      background: var(--bg-surface);
+    }
+
+    .filter-btn.danger {
+      background: rgba(255, 71, 87, 0.08);
+      color: var(--error);
+      border: 1px solid rgba(255, 71, 87, 0.2);
+    }
+
+    .filter-btn.danger:hover {
+      background: rgba(255, 71, 87, 0.15);
+    }
+
+    /* ── TABLE PANEL ── */
+    .table-panel {
+      margin: 20px 32px 32px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table.ops-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    table.ops-table thead th {
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    table.ops-table thead th:hover {
+      color: var(--primary);
+    }
+
+    table.ops-table thead th.sorted {
+      color: var(--accent);
+    }
+
+    table.ops-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    table.ops-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.ops-table tbody tr:hover td {
+      background: rgba(30, 10, 60, 0.02);
+    }
+
+    .booking-id-cell {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── STATUS BADGE ── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-pill.confirmed {
+      background: rgba(0, 200, 151, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(0, 200, 151, 0.25);
+    }
+
+    .status-pill.confirmed .dot {
+      background: var(--success);
+    }
+
+    .status-pill.cancelled {
+      background: rgba(255, 71, 87, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(255, 71, 87, 0.25);
+    }
+
+    .status-pill.cancelled .dot {
+      background: var(--error);
+    }
+
+    .status-pill.refunded {
+      background: rgba(84, 160, 255, 0.1);
+      color: var(--info);
+      border: 1px solid rgba(84, 160, 255, 0.25);
+    }
+
+    .status-pill.refunded .dot {
+      background: var(--info);
+    }
+
+    .status-pill.pending {
+      background: rgba(245, 166, 35, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 166, 35, 0.25);
+    }
+
+    .status-pill.pending .dot {
+      background: var(--warning);
+    }
+
+    /* ── PAYMENT PILL ── */
+    .payment-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(30, 10, 60, 0.05);
+      color: var(--primary);
+      border: 1px solid var(--border-color);
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .action-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-main);
+    }
+
+    .action-btn:hover {
+      border-color: var(--primary);
+      background: rgba(30, 10, 60, 0.04);
+    }
+
+    .action-btn.edit {
+      color: var(--primary);
+    }
+
+    .action-btn.edit:hover {
+      background: rgba(30, 10, 60, 0.07);
+    }
+
+    .action-btn.cancel {
+      color: var(--error);
+      border-color: rgba(255, 71, 87, 0.2);
+    }
+
+    .action-btn.cancel:hover {
+      background: rgba(255, 71, 87, 0.06);
+      border-color: var(--error);
+    }
+
+    .action-btn.view {
+      color: var(--info);
+      border-color: rgba(84, 160, 255, 0.2);
+    }
+
+    .action-btn.view:hover {
+      background: rgba(84, 160, 255, 0.06);
+      border-color: var(--info);
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .empty-sub {
+      font-size: 13px;
+    }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      color: var(--text-main);
+    }
+
+    .page-btn:hover {
+      border-color: var(--primary);
+      background: rgba(30, 10, 60, 0.04);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: #FFF;
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 6, 20, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--panel-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-color);
+      width: 100%;
+      max-width: 580px;
+      padding: 32px;
+      transform: scale(0.95) translateY(16px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-surface);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .modal-form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .modal-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--primary);
+    }
+
+    .modal-input,
+    .modal-select {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      color: var(--text-main);
+      background: var(--bg-surface);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: text;
+    }
+
+    .modal-input:focus,
+    .modal-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.12);
+      background: var(--panel-bg);
+    }
+
+    .modal-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 20px 0;
+    }
+
+    .modal-section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.save {
+      background: var(--primary);
+      color: #FFF;
+      box-shadow: 0 4px 12px rgba(30, 10, 60, 0.2);
+    }
+
+    .modal-btn.save:hover {
+      background: var(--primary-light);
+    }
+
+    .modal-btn.cancel-btn {
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-btn.cancel-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ── DETAIL PANEL (view mode) ── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+    }
+
+    .detail-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .detail-field-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .detail-field-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 600;
+      background: var(--primary);
+      border: 1px solid var(--accent);
+      color: #FFF;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--error);
+    }
+
+    /* ── SEED DEMO BANNER ── */
+    .demo-banner {
+      margin: 16px 32px 0;
+      background: rgba(245, 166, 35, 0.08);
+      border: 1px solid rgba(245, 166, 35, 0.25);
+      border-radius: 10px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .demo-banner span strong {
+      color: var(--primary);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .metrics-strip {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .ops-header {
+        padding: 0 16px;
+      }
+
+      .metrics-strip {
+        grid-template-columns: 1fr 1fr;
+        padding: 16px;
+      }
+
+      .filter-bar,
+      .table-panel {
+        margin-left: 16px;
+        margin-right: 16px;
+        padding: 16px 0 0;
+      }
+
+      .table-panel {
+        margin: 12px 16px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="ops-header">
+    <div class="brand-group">
+      <div class="brand-logo">C</div>
+      <div>
+        <div class="brand-title">Ciné<span>polis</span></div>
+      </div>
+      <div class="page-badge">Operations · Transaction Log</div>
+    </div>
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link" target="_blank">Kiosk</a>
+      <a href="admin.html" class="nav-link">Admin</a>
+      <a href="marketing.html" class="nav-link">Marketing</a>
+      <a href="operations.html" class="nav-link active">Operations</a>
+    </nav>
+  </header>
+
+  <!-- METRICS STRIP -->
+  <section class="metrics-strip" id="metrics-strip">
+    <div class="metric-card">
+      <div class="metric-icon" style="background:rgba(30,10,60,0.06);">🎟️</div>
+      <div class="metric-value" id="met-total">—</div>
+      <div class="metric-label">Total Transactions</div>
+      <div class="metric-delta neutral" id="met-total-delta">All time</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:rgba(0,200,151,0.08);">✅</div>
+      <div class="metric-value" style="color:var(--success)" id="met-confirmed">—</div>
+      <div class="metric-label">Confirmed Bookings</div>
+      <div class="metric-delta up" id="met-confirmed-delta"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:rgba(245,166,35,0.08);">💰</div>
+      <div class="metric-value" style="color:var(--accent)" id="met-revenue">—</div>
+      <div class="metric-label">Total Revenue</div>
+      <div class="metric-delta up" id="met-revenue-delta"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:rgba(84,160,255,0.08);">🎬</div>
+      <div class="metric-value" id="met-tickets">—</div>
+      <div class="metric-label">Tickets Sold</div>
+      <div class="metric-delta neutral" id="met-tickets-delta"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon" style="background:rgba(255,71,87,0.08);">❌</div>
+      <div class="metric-value" style="color:var(--error)" id="met-cancelled">—</div>
+      <div class="metric-label">Cancelled / Refunded</div>
+      <div class="metric-delta neutral" id="met-cancelled-delta"></div>
+    </div>
+  </section>
+
+  <!-- EMPTY STATE BANNER -->
+  <div class="demo-banner" id="demo-banner">
+    <span>🎬 <strong>No transactions yet.</strong> Complete a booking on the <a href="index.html"
+        style="color:var(--accent);font-weight:700;">Live Kiosk</a> — it will appear here automatically.</span>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" type="text" placeholder="Search by Booking ID, movie, mobile…"
+        oninput="applyFilters()" autocomplete="off">
+    </div>
+    <select class="filter-select" id="filter-status" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="cancelled">Cancelled</option>
+      <option value="refunded">Refunded</option>
+      <option value="pending">Pending</option>
+    </select>
+    <select class="filter-select" id="filter-payment" onchange="applyFilters()">
+      <option value="">All Payment Methods</option>
+      <option value="qr">QR / UPI</option>
+      <option value="card">Card</option>
+      <option value="cash">Cash</option>
+    </select>
+    <select class="filter-select" id="filter-sort" onchange="applyFilters()">
+      <option value="newest">Newest First</option>
+      <option value="oldest">Oldest First</option>
+      <option value="amount-desc">Amount: High → Low</option>
+      <option value="amount-asc">Amount: Low → High</option>
+    </select>
+    <button class="filter-btn primary" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="filter-btn secondary" onclick="clearFilters()">Reset Filters</button>
+  </div>
+
+  <!-- TABLE PANEL -->
+  <div class="table-panel">
+    <div class="table-header">
+      <div>
+        <div class="table-title">Transaction Ledger</div>
+        <div class="table-meta" id="table-meta">Loading…</div>
+      </div>
+      <button class="filter-btn primary" onclick="openAddModal()" id="add-txn-btn">＋ Add Transaction</button>
+    </div>
+    <div class="table-wrap">
+      <table class="ops-table" id="ops-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('bookingId')">Booking ID <span id="sort-bookingId"></span></th>
+            <th onclick="sortBy('timestamp')">Date &amp; Time <span id="sort-timestamp"></span></th>
+            <th onclick="sortBy('movie')">Movie <span id="sort-movie"></span></th>
+            <th>Showtime / Screen</th>
+            <th>Seats</th>
+            <th onclick="sortBy('tickets')">Tickets <span id="sort-tickets"></span></th>
+            <th>Mobile</th>
+            <th>Payment</th>
+            <th onclick="sortBy('total')">Total <span id="sort-total"></span></th>
+            <th onclick="sortBy('status')">Status <span id="sort-status"></span></th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ops-tbody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="page-info">Showing 0 of 0</span>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="ops-toast">Saved successfully.</div>
+
+  <!-- EDIT / ADD MODAL -->
+  <div class="modal-overlay" id="edit-modal-overlay" onclick="closeModal(event)">
+    <div class="modal" id="edit-modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modal-title-text">Edit Transaction</div>
+          <div class="modal-subtitle" id="modal-subtitle-text">Update booking details below</div>
+        </div>
+        <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      </div>
+
+      <input type="hidden" id="edit-index">
+
+      <div class="modal-row">
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-bookingId">Booking ID</label>
+          <input class="modal-input" id="edit-bookingId" type="text" placeholder="CP12345678">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-status">Status</label>
+          <select class="modal-select" id="edit-status">
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-form-group">
+        <label class="modal-label" for="edit-movie">Movie Title</label>
+        <input class="modal-input" id="edit-movie" type="text" placeholder="Eclipse Protocol">
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-showtime">Showtime</label>
+          <input class="modal-input" id="edit-showtime" type="text" placeholder="10:30 AM">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-screen">Screen</label>
+          <input class="modal-input" id="edit-screen" type="text" placeholder="Screen 1 (IMAX)">
+        </div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-seats">Seats</label>
+          <input class="modal-input" id="edit-seats" type="text" placeholder="A1, A2">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-tickets">Tickets</label>
+          <input class="modal-input" id="edit-tickets" type="number" min="1" max="20" placeholder="2">
+        </div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-mobile">Mobile Number</label>
+          <input class="modal-input" id="edit-mobile" type="tel" placeholder="9876543210" maxlength="10">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="edit-payment">Payment Method</label>
+          <select class="modal-select" id="edit-payment">
+            <option value="qr">QR / UPI</option>
+            <option value="card">Card</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-form-group">
+        <label class="modal-label" for="edit-total">Total Amount (₹)</label>
+        <input class="modal-input" id="edit-total" type="number" min="0" placeholder="750">
+      </div>
+
+      <div class="modal-form-group">
+        <label class="modal-label" for="edit-timestamp">Transaction Timestamp</label>
+        <input class="modal-input" id="edit-timestamp" type="datetime-local">
+      </div>
+
+
+
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" onclick="closeModalDirect()">Cancel</button>
+        <button class="modal-btn save" onclick="saveTransaction()">Save Transaction</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW DETAIL MODAL -->
+  <div class="modal-overlay" id="view-modal-overlay" onclick="closeViewModal(event)">
+    <div class="modal" id="view-modal" style="max-width:520px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="view-booking-id">CP00000000</div>
+          <div class="modal-subtitle" id="view-timestamp"></div>
+        </div>
+        <button class="modal-close" onclick="closeViewModalDirect()">✕</button>
+      </div>
+
+      <div class="detail-grid" id="view-detail-grid"></div>
+
+      <div class="modal-divider"></div>
+      <div
+        style="display:flex;justify-content:space-between;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:var(--primary);">
+        <span>Total Paid</span>
+        <span style="color:var(--accent)" id="view-total"></span>
+      </div>
+
+      <div class="modal-footer" style="margin-top:20px;">
+        <button class="modal-btn cancel-btn" onclick="closeViewModalDirect()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CINEPOLIS OPERATIONS — Transaction Management Controller
+    // ============================================================
+
+    const STORAGE_KEY = 'cira_transactions_v1';
+    const PAGE_SIZE = 15;
+
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let currentPage = 1;
+    let sortKey = 'timestamp';
+    let sortDir = -1; // -1 = desc, 1 = asc
+
+    // ── INIT ──────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTransactions();
+    });
+
+    function loadTransactions() {
+      try {
+        allTransactions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      } catch (e) {
+        allTransactions = [];
+      }
+      updateDemoBanner();
+      applyFilters();
+      updateMetrics();
+    }
+
+    function updateDemoBanner() {
+      const banner = document.getElementById('demo-banner');
+      if (allTransactions.length > 0) {
+        banner.style.display = 'none';
+      } else {
+        banner.style.display = 'flex';
+      }
+    }
+
+    // ── METRICS ────────────────────────────────────────────────
+    function updateMetrics() {
+      const total = allTransactions.length;
+      const confirmed = allTransactions.filter(t => t.status === 'confirmed').length;
+      const cancelled = allTransactions.filter(t => t.status === 'cancelled' || t.status === 'refunded').length;
+      const revenue = allTransactions
+        .filter(t => t.status === 'confirmed')
+        .reduce((s, t) => s + (Number(t.total) || 0), 0);
+      const tickets = allTransactions
+        .filter(t => t.status === 'confirmed')
+        .reduce((s, t) => s + (Number(t.tickets) || 0), 0);
+
+      document.getElementById('met-total').textContent = total;
+      document.getElementById('met-confirmed').textContent = confirmed;
+      document.getElementById('met-cancelled').textContent = cancelled;
+      document.getElementById('met-revenue').textContent = revenue ? `₹${revenue.toLocaleString('en-IN')}` : '₹0';
+      document.getElementById('met-tickets').textContent = tickets;
+      document.getElementById('met-revenue-delta').textContent = confirmed ? `${confirmed} paid bookings` : 'No revenue yet';
+      document.getElementById('met-tickets-delta').textContent = `Avg ₹${confirmed ? Math.round(revenue / confirmed) : 0}/booking`;
+      document.getElementById('met-confirmed-delta').textContent = total ? `${Math.round(confirmed / total * 100)}% success rate` : '';
+      document.getElementById('met-cancelled-delta').textContent = cancelled ? `${cancelled} affected` : 'None';
+      document.getElementById('met-total-delta').textContent = total ? `${total} records` : 'No data';
+    }
+
+    // ── FILTER & SORT ──────────────────────────────────────────
+    function applyFilters() {
+      const q = document.getElementById('search-input').value.trim().toLowerCase();
+      const status = document.getElementById('filter-status').value;
+      const pay = document.getElementById('filter-payment').value;
+      const sort = document.getElementById('filter-sort').value;
+
+      filteredTransactions = allTransactions.filter(t => {
+        const matchQ = !q || [t.bookingId, t.movie, t.mobile, t.seats, t.screen]
+          .some(v => (v || '').toLowerCase().includes(q));
+        const matchStatus = !status || t.status === status;
+        const matchPay = !pay || t.paymentMethod === pay;
+        return matchQ && matchStatus && matchPay;
+      });
+
+      // Sort
+      filteredTransactions.sort((a, b) => {
+        if (sort === 'newest') return new Date(b.timestamp) - new Date(a.timestamp);
+        if (sort === 'oldest') return new Date(a.timestamp) - new Date(b.timestamp);
+        if (sort === 'amount-desc') return (b.total || 0) - (a.total || 0);
+        if (sort === 'amount-asc') return (a.total || 0) - (b.total || 0);
+        return 0;
+      });
+
+      // Manual column sort override
+      filteredTransactions.sort((a, b) => {
+        const va = a[sortKey]; const vb = b[sortKey];
+        if (sortKey === 'timestamp') {
+          return sortDir * (new Date(va) - new Date(vb));
+        }
+        if (typeof va === 'number') return sortDir * (va - vb);
+        return sortDir * (String(va || '').localeCompare(String(vb || '')));
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function sortBy(key) {
+      if (sortKey === key) sortDir *= -1;
+      else { sortKey = key; sortDir = -1; }
+
+      // Update sort icons
+      document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '');
+      const el = document.getElementById(`sort-${key}`);
+      if (el) el.textContent = sortDir === -1 ? ' ↓' : ' ↑';
+
+      applyFilters();
+    }
+
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-payment').value = '';
+      document.getElementById('filter-sort').value = 'newest';
+      sortKey = 'timestamp'; sortDir = -1;
+      document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '');
+      applyFilters();
+    }
+
+    // ── RENDER TABLE ──────────────────────────────────────────
+    function renderTable() {
+      const tbody = document.getElementById('ops-tbody');
+      const total = filteredTransactions.length;
+      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      currentPage = Math.min(currentPage, pages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const slice = filteredTransactions.slice(start, start + PAGE_SIZE);
+
+      // Meta
+      document.getElementById('table-meta').textContent =
+        total === 0 ? 'No transactions found' :
+          `Showing ${start + 1}–${Math.min(start + slice.length, total)} of ${total} transaction${total !== 1 ? 's' : ''}`;
+
+      if (slice.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="11">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <div class="empty-title">No transactions found</div>
+              <div class="empty-sub">Complete a booking on the kiosk or adjust your filters.</div>
+            </div>
+          </td></tr>
+        `;
+        renderPagination(0, 1);
+        return;
+      }
+
+      tbody.innerHTML = slice.map((txn, i) => {
+        const realIdx = allTransactions.indexOf(txn);
+        const ts = txn.timestamp ? new Date(txn.timestamp) : null;
+        const dateStr = ts ? ts.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        const timeStr = ts ? ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+        const payLabel = txn.paymentMethod === 'qr' ? '🔳 QR/UPI' : txn.paymentMethod === 'card' ? '💳 Card' : '💵 Cash';
+        const statusClass = (txn.status || 'confirmed').toLowerCase();
+
+        return `
+          <tr>
+            <td><div class="booking-id-cell">${escHtml(txn.bookingId || '—')}</div></td>
+            <td>
+              <div style="font-weight:600;font-size:12px;">${dateStr}</div>
+              <div style="color:var(--text-muted);font-size:11px;">${timeStr}</div>
+            </td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-weight:600;">${escHtml(txn.movie || '—')}</td>
+            <td>
+              <div style="font-size:12px;font-weight:600;">${escHtml(txn.showtime || '—')}</div>
+              <div style="color:var(--text-muted);font-size:11px;">${escHtml(txn.screen || '')}</div>
+            </td>
+            <td style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--primary);">${escHtml(txn.seats || '—')}</td>
+            <td style="text-align:center;font-weight:700;">${txn.tickets || '—'}</td>
+            <td style="font-family:'Courier New',monospace;font-size:12px;">${txn.mobile ? '+91 ' + txn.mobile : '—'}</td>
+            <td><span class="payment-pill">${payLabel}</span></td>
+            <td style="font-family:'Outfit',sans-serif;font-weight:800;color:var(--accent);font-size:14px;">₹${Number(txn.total || 0).toLocaleString('en-IN')}</td>
+            <td><span class="status-pill ${statusClass}"><span class="dot"></span>${txn.status || 'confirmed'}</span></td>
+            <td style="text-align:right;">
+              <div style="display:flex;gap:5px;justify-content:flex-end;">
+                <button class="action-btn view" onclick="openViewModal(${realIdx})">👁 View</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination(total, pages);
+    }
+
+    function renderPagination(total, pages) {
+      const btns = document.getElementById('page-btns');
+      const info = document.getElementById('page-info');
+      if (total === 0) { btns.innerHTML = ''; info.textContent = 'No results'; return; }
+
+      let html = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>`;
+      for (let p = 1; p <= pages; p++) {
+        if (pages > 7 && p > 2 && p < pages - 1 && Math.abs(p - currentPage) > 2) {
+          if (p === 3 || p === pages - 2) html += `<span style="padding:0 4px;color:var(--text-muted);">…</span>`;
+          continue;
+        }
+        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage >= pages ? 'disabled' : ''}>›</button>`;
+      btns.innerHTML = html;
+      info.textContent = `Page ${currentPage} of ${pages} · ${total} transaction${total !== 1 ? 's' : ''}`;
+    }
+
+    function goPage(p) {
+      const pages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
+      if (p < 1 || p > pages) return;
+      currentPage = p;
+      renderTable();
+    }
+
+    // ── EDIT MODAL ────────────────────────────────────────────
+    function openAddModal() {
+      document.getElementById('modal-title-text').textContent = 'Add Transaction';
+      document.getElementById('modal-subtitle-text').textContent = 'Fill in the details below to manually add a booking';
+      document.getElementById('edit-index').value = '-1';
+
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const localDt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      document.getElementById('edit-bookingId').value = 'CP' + Date.now().toString().slice(-8).toUpperCase();
+      document.getElementById('edit-status').value = 'confirmed';
+      document.getElementById('edit-movie').value = '';
+      document.getElementById('edit-showtime').value = '';
+      document.getElementById('edit-screen').value = '';
+      document.getElementById('edit-seats').value = '';
+      document.getElementById('edit-tickets').value = '';
+      document.getElementById('edit-mobile').value = '';
+      document.getElementById('edit-payment').value = 'qr';
+      document.getElementById('edit-total').value = '';
+      document.getElementById('edit-timestamp').value = localDt;
+
+      document.getElementById('edit-modal-overlay').classList.add('open');
+    }
+
+    function openEditModal(idx) {
+      const txn = allTransactions[idx];
+      if (!txn) return;
+
+      document.getElementById('modal-title-text').textContent = 'Edit Transaction';
+      document.getElementById('modal-subtitle-text').textContent = `Editing booking ${txn.bookingId}`;
+      document.getElementById('edit-index').value = idx;
+
+      document.getElementById('edit-bookingId').value = txn.bookingId || '';
+      document.getElementById('edit-status').value = txn.status || 'confirmed';
+      document.getElementById('edit-movie').value = txn.movie || '';
+      document.getElementById('edit-showtime').value = txn.showtime || '';
+      document.getElementById('edit-screen').value = txn.screen || '';
+      document.getElementById('edit-seats').value = txn.seats || '';
+      document.getElementById('edit-tickets').value = txn.tickets || '';
+      document.getElementById('edit-mobile').value = txn.mobile || '';
+      document.getElementById('edit-payment').value = txn.paymentMethod || 'qr';
+      document.getElementById('edit-total').value = txn.total || '';
+
+      // Local datetime-local format
+      if (txn.timestamp) {
+        const d = new Date(txn.timestamp);
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('edit-timestamp').value =
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } else {
+        document.getElementById('edit-timestamp').value = '';
+      }
+
+
+
+      document.getElementById('edit-modal-overlay').classList.add('open');
+      closeViewModalDirect();
+    }
+
+    function saveTransaction() {
+      const idx = parseInt(document.getElementById('edit-index').value);
+      const isNew = idx === -1;
+
+      const tsRaw = document.getElementById('edit-timestamp').value;
+      const tsISO = tsRaw ? new Date(tsRaw).toISOString() : new Date().toISOString();
+
+      const data = {
+        bookingId: document.getElementById('edit-bookingId').value.trim() || ('CP' + Date.now()),
+        status: document.getElementById('edit-status').value,
+        movie: document.getElementById('edit-movie').value.trim(),
+        showtime: document.getElementById('edit-showtime').value.trim(),
+        screen: document.getElementById('edit-screen').value.trim(),
+        seats: document.getElementById('edit-seats').value.trim(),
+        tickets: parseInt(document.getElementById('edit-tickets').value) || 0,
+        mobile: document.getElementById('edit-mobile').value.trim(),
+        paymentMethod: document.getElementById('edit-payment').value,
+        total: parseFloat(document.getElementById('edit-total').value) || 0,
+        timestamp: tsISO
+      };
+
+      if (isNew) {
+        allTransactions.unshift(data);
+      } else {
+        allTransactions[idx] = { ...allTransactions[idx], ...data };
+      }
+
+      persist();
+      closeModalDirect();
+      updateMetrics();
+      applyFilters();
+      updateDemoBanner();
+      showToast(isNew ? '✅ Transaction added!' : '✅ Transaction updated!', 'success');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('edit-modal-overlay')) closeModalDirect();
+    }
+    function closeModalDirect() {
+      document.getElementById('edit-modal-overlay').classList.remove('open');
+    }
+
+    // ── VIEW DETAIL MODAL ─────────────────────────────────────
+    function openViewModal(idx) {
+      const txn = allTransactions[idx];
+      if (!txn) return;
+
+      document.getElementById('view-booking-id').textContent = txn.bookingId || '—';
+      document.getElementById('view-timestamp').textContent =
+        txn.timestamp ? new Date(txn.timestamp).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' }) : '—';
+
+      const fields = [
+        { label: 'Movie', value: txn.movie || '—' },
+        { label: 'Status', value: `<span class="status-pill ${txn.status || 'confirmed'}"><span class="dot"></span>${txn.status || 'confirmed'}</span>` },
+        { label: 'Showtime', value: txn.showtime || '—' },
+        { label: 'Screen', value: txn.screen || '—' },
+        { label: 'Seats', value: txn.seats || '—' },
+        { label: 'Tickets', value: txn.tickets || '—' },
+        { label: 'Mobile', value: txn.mobile ? `+91 ${txn.mobile}` : '—' },
+        { label: 'Payment Method', value: txn.paymentMethod === 'qr' ? '🔳 QR / UPI' : txn.paymentMethod === 'card' ? '💳 Card' : '💵 Cash' },
+      ];
+
+      document.getElementById('view-detail-grid').innerHTML = fields.map(f => `
+        <div class="detail-field">
+          <div class="detail-field-label">${f.label}</div>
+          <div class="detail-field-value">${f.value}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('view-total').textContent = `₹${Number(txn.total || 0).toLocaleString('en-IN')}`;
+      document.getElementById('view-modal-overlay').classList.add('open');
+    }
+
+    function closeViewModal(e) {
+      if (e.target === document.getElementById('view-modal-overlay')) closeViewModalDirect();
+    }
+    function closeViewModalDirect() {
+      document.getElementById('view-modal-overlay').classList.remove('open');
+    }
+
+    // ── DELETE ────────────────────────────────────────────────
+    function deleteTransaction(idx) {
+      const txn = allTransactions[idx];
+      if (!txn) return;
+      if (!confirm(`Delete booking ${txn.bookingId}?\nThis action cannot be undone.`)) return;
+      allTransactions.splice(idx, 1);
+      persist();
+      updateMetrics();
+      applyFilters();
+      updateDemoBanner();
+      showToast('🗑 Transaction deleted.', 'error');
+    }
+
+    // ── PERSIST ───────────────────────────────────────────────
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allTransactions));
+    }
+
+
+
+    // ── EXPORT CSV ────────────────────────────────────────────
+    function exportCSV() {
+      if (filteredTransactions.length === 0) {
+        showToast('No transactions to export.', 'error'); return;
+      }
+      const headers = ['Booking ID', 'Timestamp', 'Movie', 'Showtime', 'Screen', 'Seats', 'Tickets', 'Mobile', 'Payment', 'Total', 'Status'];
+      const rows = filteredTransactions.map(t => [
+        t.bookingId, t.timestamp, t.movie, t.showtime, t.screen,
+        t.seats, t.tickets, t.mobile ? `+91${t.mobile}` : '',
+        t.paymentMethod, t.total, t.status
+      ].map(v => `"${String(v || '').replace(/"/g, '""')}"`));
+
+      const csv = [headers.map(h => `"${h}"`).join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cinepolis_transactions_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`⬇ Exported ${filteredTransactions.length} records as CSV.`, 'success');
+    }
+
+    // ── TOAST ─────────────────────────────────────────────────
+    let toastTimer = null;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('ops-toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+    }
+
+    // ── UTIL ──────────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+
+</html>
